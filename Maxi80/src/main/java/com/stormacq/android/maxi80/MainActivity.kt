@@ -48,6 +48,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateTitle(artist : String, track : String) {
+        this@MainActivity.runOnUiThread {
+            this.artist.text = artist
+            this.track.text = track
+        }
+
+    }
+
     private fun play() {
         GlobalScope.async(Dispatchers.Default, CoroutineStart.DEFAULT, null, {
             if (exoPlayer == null) {
@@ -75,11 +83,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     .setIcyMetadataChangeListener { icyMetadata ->
                         Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
-                        this@MainActivity.runOnUiThread {
-                            var data = icyMetadata.streamTitle.split(" - ")
-                            artist.text = data[0]
-                            track.text = data[1]
-                        }
+                        var data = icyMetadata.streamTitle.split(" - ")
+                        updateTitle(data[0], data[1])
                     }
                     .build()
 
@@ -105,6 +110,7 @@ class MainActivity : AppCompatActivity() {
     private fun stop() {
         releaseResources(true)
         isPlaying = false
+        updateTitle(resources.getString(R.string.app_name), resources.getString(R.string.app_description))
     }
 
     private fun releaseResources(releasePlayer: Boolean) {
