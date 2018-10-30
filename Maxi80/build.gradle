@@ -9,10 +9,10 @@ android {
         applicationId "com.example.exoplayer2.ext.icy"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 230100
-        versionName "1.0.0"
+        versionCode 20181030
+        versionName "2.0.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+//        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -30,8 +30,8 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.26.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.26.1'
 
-    testImplementation 'junit:junit:4.12'
-
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+//    testImplementation 'junit:junit:4.12'
+//
+//    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+//    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }

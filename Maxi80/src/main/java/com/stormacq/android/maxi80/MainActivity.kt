@@ -1,8 +1,9 @@
-package com.example.exoplayer2.ext.icy
+package com.stormacq.android.maxi80
 
 import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+//import android.app.Activity
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
@@ -33,8 +34,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        stream.setText(DEFAULT_STREAM)
 
         userAgent = Util.getUserAgent(applicationContext, applicationContext.getString(R.string.app_name))
 
@@ -76,6 +75,11 @@ class MainActivity : AppCompatActivity() {
                     }
                     .setIcyMetadataChangeListener { icyMetadata ->
                         Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
+                        this@MainActivity.runOnUiThread {
+                            var data = icyMetadata.streamTitle.split(" - ")
+                            artist.text = data[0]
+                            track.text = data[1]
+                        }
                     }
                     .build()
 
@@ -89,11 +93,12 @@ class MainActivity : AppCompatActivity() {
             // The MediaSource represents the media to be played
             val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
                     .setExtractorsFactory(extractorsFactory)
-                    .createMediaSource(Uri.parse(stream.text.toString()))
+                    .createMediaSource(Uri.parse(DEFAULT_STREAM))
 
             // Prepares media to play (happens on background thread) and triggers
             // {@code onPlayerStateChanged} callback when the stream is ready to play
             exoPlayer?.prepare(mediaSource)
+            exoPlayer?.playWhenReady = true
         })
     }
 
@@ -155,6 +160,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-        private const val DEFAULT_STREAM = "http://ice1.somafm.com/indiepop-128-mp3"
+        private const val DEFAULT_STREAM = "https://audio1.maxi80.com"
     }
 }

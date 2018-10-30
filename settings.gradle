@@ -15,4 +15,4 @@
  */
 
 include ':exoplayer2-ext-icy'
-include ':example'
+include ':Maxi80'
