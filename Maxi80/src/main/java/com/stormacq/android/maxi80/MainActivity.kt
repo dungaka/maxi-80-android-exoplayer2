@@ -1,10 +1,13 @@
 package com.stormacq.android.maxi80
 
+import android.content.Context
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 //import android.app.Activity
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log
+import android.widget.SeekBar
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
@@ -46,6 +49,43 @@ class MainActivity : AppCompatActivity() {
                 play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
             }
         }
+
+        prepareSeekBar()
+    }
+
+    private fun prepareSeekBar() {
+
+        volumeDown.setOnClickListener {
+            volumeBar.setProgress(volumeBar.progress - 1, true)
+        }
+        volumeUp.setOnClickListener {
+            volumeBar.setProgress(volumeBar.progress + 1, true)
+        }
+
+        volumeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                // TODO Auto-generated method stub
+
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                // TODO Auto-generated method stub
+
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+            }
+        })
+
+        val context = applicationContext
+        val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val MAX_VOLUME = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        volumeBar.max = MAX_VOLUME
+        volumeBar.min = 0
+        volumeBar.progress = (volumeBar.max + volumeBar.min) / 2
     }
 
     private fun updateTitle(artist : String, track : String) {

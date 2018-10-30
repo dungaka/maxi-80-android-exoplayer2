@@ -4,5 +4,10 @@
     <string name="app_description">La radio de toute une génération</string>
 
     <string name="cover">No cover to show</string>
+    <string name="volume_up">Volume Up</string>
+    <string name="volume_down">Volume Down</string>
+
+    <string name="share">Share</string>
+    <string name="info">Info</string>
 
 </resources>
