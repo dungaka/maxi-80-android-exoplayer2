@@ -1,12 +1,15 @@
 package com.stormacq.android.maxi80
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 //import android.app.Activity
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log
+import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.SeekBar
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
@@ -80,8 +83,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        val context = applicationContext
-        val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val MAX_VOLUME = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         volumeBar.max = MAX_VOLUME
         volumeBar.min = 0
@@ -90,6 +92,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTitle(artist : String, track : String) {
         this@MainActivity.runOnUiThread {
+            this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
+            this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
             this.artist.text = artist
             this.track.text = track
         }
@@ -207,5 +211,11 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val DEFAULT_STREAM = "https://audio1.maxi80.com"
+    }
+
+
+    fun showAbout(view: View) {
+        val intent = Intent(this, AboutActivity::class.java)
+        startActivity(intent)
     }
 }
