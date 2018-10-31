@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         prepareSeekBar()
+        play()
     }
 
     private fun prepareSeekBar() {
@@ -128,7 +129,12 @@ class MainActivity : AppCompatActivity() {
                     .setIcyMetadataChangeListener { icyMetadata ->
                         Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
                         var data = icyMetadata.streamTitle.split(" - ")
-                        updateTitle(data[0], data[1])
+//                        Log.d(TAG, data.toString())
+                        if (data.size < 2) {
+                            updateTitle(resources.getString(R.string.app_name), icyMetadata.streamTitle)
+                        } else {
+                            updateTitle(data[0], data[1])
+                        }
                     }
                     .build()
 
