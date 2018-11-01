@@ -11,6 +11,8 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.SeekBar
+import com.amazonaws.amplify.generated.graphql.ArtworkQuery
+import com.amazonaws.amplify.generated.graphql.StationQuery
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
@@ -27,6 +29,16 @@ import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.async
 import okhttp3.OkHttpClient
 import saschpe.exoplayer2.ext.icy.IcyHttpDataSourceFactory
+import com.amazonaws.regions.Regions
+import com.amazonaws.auth.CognitoCachingCredentialsProvider
+import com.amazonaws.mobile.config.AWSConfiguration
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
+import com.apollographql.apollo.GraphQLCall
+import com.apollographql.apollo.api.Response
+import com.apollographql.apollo.exception.ApolloException
+import com.squareup.picasso.Picasso
+
 
 /**
  * Test application, doesn't necessarily show the best way to do things.
@@ -34,17 +46,60 @@ import saschpe.exoplayer2.ext.icy.IcyHttpDataSourceFactory
 class MainActivity : AppCompatActivity() {
     private var exoPlayer: SimpleExoPlayer? = null
     private val exoPlayerEventListener = ExoPlayerEventListener()
-    private lateinit var userAgent: String
     private var isPlaying = false
 
     private var currentArtist : String = ""
     private var currentTrack : String = ""
 
+    private var appSyncClient: AWSAppSyncClient? = null
+
+    private var station : StationQuery.Station? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        userAgent = Util.getUserAgent(applicationContext, applicationContext.getString(R.string.app_name))
+        // Initialize the Amazon Cognito credentials provider
+        val credentialsProvider = CognitoCachingCredentialsProvider(
+                applicationContext,
+                "eu-west-1:74b938b1-4a81-43ed-a4de-86b37001110a", // Identity pool ID
+                Regions.EU_WEST_1 // Region
+        )
+
+        // initialize the AppSync client
+        if (appSyncClient == null) {
+            appSyncClient = AWSAppSyncClient.builder()
+                    .context(applicationContext)
+                    .awsConfiguration(AWSConfiguration(applicationContext))
+                    .credentialsProvider(credentialsProvider)
+                    .build();
+        }
+
+        // query radio data
+        appSyncClient!!.query(StationQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(object : GraphQLCall.Callback<StationQuery.Data>() {
+                    override fun onResponse(response: Response<StationQuery.Data>) {
+                        this@MainActivity.runOnUiThread {
+                            Log.d(TAG, "StationQuery returned : " + response.data().toString());
+                            station = response.data()?.station()
+                            currentTrack = station!!.name()
+                            currentArtist = station!!.desc()
+                            play()
+                        }
+                    }
+
+                    override fun onFailure(e: ApolloException) {
+                        Log.e(TAG, "Failed to perform StationQuery", e);
+                        station = StationQuery.Station("Station",
+                                resources.getString(R.string.app_name),
+                                resources.getString(R.string.app_url),
+                                "",
+                                resources.getString(R.string.app_description),
+                                resources.getString(R.string.app_description))
+                        play()
+                    }
+                });
 
         play_pause.setOnClickListener {
             if (isPlaying) {
@@ -55,8 +110,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         prepareSeekBar()
-        play()
+
+        //play() will be called when we will receive the StationQuery callback
     }
+
 
     private fun prepareSeekBar() {
 
@@ -102,7 +159,37 @@ class MainActivity : AppCompatActivity() {
             currentArtist = artist
             this.track.text = track
             currentTrack = track
+
+            loadArtwork(currentArtist, currentTrack)
         }
+    }
+
+    private fun loadArtwork(currentArtist : String, currentTrack: String) {
+
+        Log.d(TAG,"Loading artwork for current artist (%s) and track (%s)".format(currentArtist, currentTrack))
+        appSyncClient!!.query(ArtworkQuery.builder()
+                                        .artist(currentArtist)
+                                        .track(currentTrack)
+                                        .build())
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(object : GraphQLCall.Callback<ArtworkQuery.Data>() {
+                    override fun onResponse(response: Response<ArtworkQuery.Data>) {
+                        this@MainActivity.runOnUiThread {
+                            Log.d(TAG, "ArtworkQuery returned : " + response.data().toString());
+                            var url = response.data()!!.artwork()!!.url()!!
+//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
+                            Picasso.get().load(url).into(cover);
+                        }
+                    }
+
+                    override fun onFailure(e: ApolloException) {
+                        this@MainActivity.runOnUiThread {
+                            Log.e(TAG, "Failed to perform ArtworkQuery", e);
+//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
+                            cover.setImageResource(R.drawable.nocover_400x400)
+                        }
+                    }
+                });
 
     }
 
@@ -113,73 +200,70 @@ class MainActivity : AppCompatActivity() {
             data = metadata.split("-") // try without space
             Log.d(TAG, data.toString())
             if (data.size < 2) {
-                updateTitle(resources.getString(R.string.app_name), metadata)
+                updateTitle(station!!.name(), metadata)
             } else {
                 updateTitle(data[0], data[1])
             }
         } else {
             updateTitle(data[0], data[1])
         }
-
     }
 
     private fun play() {
         play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
 
-        GlobalScope.async(Dispatchers.Default, CoroutineStart.DEFAULT, null, {
-            if (exoPlayer == null) {
-                exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
-                        DefaultRenderersFactory(applicationContext),
-                        DefaultTrackSelector(),
-                        DefaultLoadControl()
-                )
-                exoPlayer?.addListener(exoPlayerEventListener)
-            }
-
-            val audioAttributes = AudioAttributes.Builder()
-                    .setContentType(C.CONTENT_TYPE_MUSIC)
-                    .setUsage(C.USAGE_MEDIA)
-                    .build()
-            exoPlayer?.audioAttributes = audioAttributes
-
-            // Custom HTTP data source factory which requests Icy metadata and parses it if
-            // the stream server supports it
-            val client = OkHttpClient.Builder().build()
-            val icyHttpDataSourceFactory = IcyHttpDataSourceFactory.Builder(client)
-                    .setUserAgent(userAgent)
-                    .setIcyHeadersListener { icyHeaders ->
-                        Log.d(TAG, "onIcyMetaData: icyHeaders=$icyHeaders")
-                    }
-                    .setIcyMetadataChangeListener { icyMetadata ->
-                        Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
-                        handleMetaData(icyMetadata.streamTitle)
-                    }
-                    .build()
-
-            // Produces DataSource instances through which media data is loaded
-            val dataSourceFactory = DefaultDataSourceFactory(
-                    applicationContext, null, icyHttpDataSourceFactory
+        if (exoPlayer == null) {
+            exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
+                    DefaultRenderersFactory(applicationContext),
+                    DefaultTrackSelector(),
+                    DefaultLoadControl()
             )
-            // Produces Extractor instances for parsing the media data
-            val extractorsFactory = DefaultExtractorsFactory()
+            exoPlayer?.addListener(exoPlayerEventListener)
+        }
 
-            // The MediaSource represents the media to be played
-            val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
-                    .setExtractorsFactory(extractorsFactory)
-                    .createMediaSource(Uri.parse(DEFAULT_STREAM))
+        val audioAttributes = AudioAttributes.Builder()
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_MEDIA)
+                .build()
+        exoPlayer?.audioAttributes = audioAttributes
 
-            // Prepares media to play (happens on background thread) and triggers
-            // {@code onPlayerStateChanged} callback when the stream is ready to play
-            exoPlayer?.prepare(mediaSource)
-            exoPlayer?.playWhenReady = true
-        })
+        // Custom HTTP data source factory which requests Icy metadata and parses it if
+        // the stream server supports it
+        val client = OkHttpClient.Builder().build()
+        val icyHttpDataSourceFactory = IcyHttpDataSourceFactory.Builder(client)
+                .setUserAgent(Util.getUserAgent(applicationContext, station!!.name()))
+                .setIcyHeadersListener { icyHeaders ->
+                    Log.d(TAG, "onIcyMetaData: icyHeaders=$icyHeaders")
+                }
+                .setIcyMetadataChangeListener { icyMetadata ->
+                    Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
+                    handleMetaData(icyMetadata.streamTitle)
+                }
+                .build()
+
+        // Produces DataSource instances through which media data is loaded
+        val dataSourceFactory = DefaultDataSourceFactory(
+                applicationContext, null, icyHttpDataSourceFactory
+        )
+        // Produces Extractor instances for parsing the media data
+        val extractorsFactory = DefaultExtractorsFactory()
+
+        // The MediaSource represents the media to be played
+        val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
+                .setExtractorsFactory(extractorsFactory)
+                .createMediaSource(Uri.parse(station!!.streamURL()))
+
+        // Prepares media to play (happens on background thread) and triggers
+        // {@code onPlayerStateChanged} callback when the stream is ready to play
+        exoPlayer?.prepare(mediaSource)
+        exoPlayer?.playWhenReady = true
     }
 
     private fun stop() {
         play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
         releaseResources(true)
         isPlaying = false
-        updateTitle(resources.getString(R.string.app_name), resources.getString(R.string.app_description))
+        updateTitle(station!!.name(), station!!.desc())
     }
 
     private fun releaseResources(releasePlayer: Boolean) {
@@ -214,7 +298,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onPlayerError(error: ExoPlaybackException) {
-            Log.e(TAG, "onPlayerStateChanged: error=$error")
+            Log.e(TAG, "onPlayerError: error=$error")
         }
 
         override fun onPositionDiscontinuity(reason: Int) {
@@ -235,7 +319,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-        private const val DEFAULT_STREAM = "https://audio1.maxi80.com"
     }
 
 

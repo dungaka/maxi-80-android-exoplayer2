@@ -2,6 +2,8 @@
 
     <string name="app_name">Maxi 80</string>
     <string name="app_description">La radio de toute une génération</string>
+    <string name="app_url">https://audio1.maxi80.com</string>
+
 
     <string name="cover">No cover to show</string>
     <string name="volume_up">Volume Up</string>

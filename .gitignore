@@ -1,4 +1,9 @@
-# Gradle
+**/.amplify
+**/.amplifyrc
+**/amplify/*
+**/awsconfiguration.json
+
+#Gradle
 .gradle/
 build/
 local.properties
@@ -19,3 +24,6 @@ Thumbs.db
 
 # Maven deployer
 pom.xml
+
+# VI
+**/*.swp
