@@ -7,10 +7,10 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        applicationId "com.example.exoplayer2.ext.icy"
+        applicationId "com.stormacq.android.maxi80"
         minSdkVersion 24
         targetSdkVersion 26
-        versionCode 20181101
+        versionCode 2018110100
         versionName "v2.0.0"
 
 //        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
