@@ -2,6 +2,7 @@
 **/.amplifyrc
 **/amplify/*
 **/awsconfiguration.json
+keys/**
 
 #Gradle
 .gradle/
