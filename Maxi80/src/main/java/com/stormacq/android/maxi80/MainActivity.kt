@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-//import android.app.Activity
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log
 import android.view.View
@@ -37,6 +37,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var userAgent: String
     private var isPlaying = false
 
+    private var currentArtist : String = ""
+    private var currentTrack : String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,10 +49,8 @@ class MainActivity : AppCompatActivity() {
         play_pause.setOnClickListener {
             if (isPlaying) {
                 stop()
-                play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
             } else {
                 play()
-                play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
             }
         }
 
@@ -87,8 +88,10 @@ class MainActivity : AppCompatActivity() {
         val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val MAX_VOLUME = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         volumeBar.max = MAX_VOLUME
-        volumeBar.min = 0
-        volumeBar.progress = (volumeBar.max + volumeBar.min) / 2
+        if (Build.VERSION.SDK_INT >= 26) {
+            volumeBar.min = 0
+        }
+        volumeBar.progress = (MAX_VOLUME + 0) / 2
     }
 
     private fun updateTitle(artist : String, track : String) {
@@ -96,12 +99,33 @@ class MainActivity : AppCompatActivity() {
             this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
             this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
             this.artist.text = artist
+            currentArtist = artist
             this.track.text = track
+            currentTrack = track
+        }
+
+    }
+
+    private fun handleMetaData(metadata : String) {
+        var data = metadata.split(" - ")
+        Log.d(TAG, data.toString())
+        if (data.size < 2) {
+            data = metadata.split("-") // try without space
+            Log.d(TAG, data.toString())
+            if (data.size < 2) {
+                updateTitle(resources.getString(R.string.app_name), metadata)
+            } else {
+                updateTitle(data[0], data[1])
+            }
+        } else {
+            updateTitle(data[0], data[1])
         }
 
     }
 
     private fun play() {
+        play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
+
         GlobalScope.async(Dispatchers.Default, CoroutineStart.DEFAULT, null, {
             if (exoPlayer == null) {
                 exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
@@ -128,13 +152,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     .setIcyMetadataChangeListener { icyMetadata ->
                         Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
-                        var data = icyMetadata.streamTitle.split(" - ")
-//                        Log.d(TAG, data.toString())
-                        if (data.size < 2) {
-                            updateTitle(resources.getString(R.string.app_name), icyMetadata.streamTitle)
-                        } else {
-                            updateTitle(data[0], data[1])
-                        }
+                        handleMetaData(icyMetadata.streamTitle)
                     }
                     .build()
 
@@ -158,6 +176,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stop() {
+        play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
         releaseResources(true)
         isPlaying = false
         updateTitle(resources.getString(R.string.app_name), resources.getString(R.string.app_description))
@@ -223,5 +242,15 @@ class MainActivity : AppCompatActivity() {
     fun showAbout(view: View) {
         val intent = Intent(this, AboutActivity::class.java)
         startActivity(intent)
+    }
+
+    fun showShare(view: View) {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_EMAIL, resources.getString(R.string.share_to))
+        intent.putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.share_subject))
+        intent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text).format(currentTrack, currentArtist))
+
+        startActivity(Intent.createChooser(intent, resources.getString(R.string.share_title)))
     }
 }
