@@ -1,22 +1,39 @@
 package com.stormacq.android.maxi80
 
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity;
-
+import android.util.Log
+import android.view.View
 import kotlinx.android.synthetic.main.activity_about.*
+import android.content.Intent
+import android.net.Uri
+
 
 class AboutActivity : AppCompatActivity() {
+
+    private val TAG = "AboutActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_about)
-//        setSupportActionBar(toolbar)
-//
-//        fab.setOnClickListener { view ->
-//            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                    .setAction("Action", null).show()
-//        }
+
+        val versionName = BuildConfig.VERSION_NAME
+        val versionCode = BuildConfig.VERSION_CODE
+
+        Log.d(TAG, "%s (%s)".format(versionName, versionCode))
+
+        app_copyright.text = resources.getString(R.string.copyright).format(versionName, versionCode)
     }
+
+    fun showWebsite(view : View) {
+        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maxi80.com"))
+        startActivity(browserIntent)
+    }
+
+    fun showDonate(view : View) {
+        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.maxi80.com/paypal.htm"))
+        startActivity(browserIntent)
+    }
+
 
 }
