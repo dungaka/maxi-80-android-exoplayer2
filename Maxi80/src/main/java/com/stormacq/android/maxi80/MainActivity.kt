@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDelegate
 import android.util.Log
 import android.view.View
@@ -57,68 +57,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
-
-        if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
-            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-
-//            try {
-//                ProviderInstaller.installIfNeeded(applicationContext)
-//                val sslContext: SSLContext
-//                sslContext = SSLContext.getInstance("TLSv1.2")
-//                sslContext.init(null, null, null)
-//                sslContext.createSSLEngine()
-//            } catch (e: Throwable) {
-//                Log.e(TAG, "Can not configure SSLContext", e)
-//            }
-        }
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // Initialize the Amazon Cognito credentials provider
-        val credentialsProvider = CognitoCachingCredentialsProvider(
-                applicationContext,
-                "eu-west-1:74b938b1-4a81-43ed-a4de-86b37001110a", // Identity pool ID
-                Regions.EU_WEST_1 // Region
-        )
-
-        // initialize the AppSync client
-        if (appSyncClient == null) {
-            appSyncClient = AWSAppSyncClient.builder()
-                    .context(applicationContext)
-                    .awsConfiguration(AWSConfiguration(applicationContext))
-                    .credentialsProvider(credentialsProvider)
-                    .build();
-        }
-
-        // query radio data
-        appSyncClient!!.query(StationQuery.builder().build())
-                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
-                .enqueue(object : GraphQLCall.Callback<StationQuery.Data>() {
-                    override fun onResponse(response: Response<StationQuery.Data>) {
-                        this@MainActivity.runOnUiThread {
-                            Log.d(TAG, "StationQuery returned : " + response.data().toString());
-                            station = response.data()?.station()
-                            currentTrack = station!!.name()
-                            currentArtist = station!!.desc()
-                            play()
-                        }
-                    }
-
-                    override fun onFailure(e: ApolloException) {
-                        this@MainActivity.runOnUiThread {
-                            Log.e(TAG, "Failed to perform StationQuery", e);
-                            station = StationQuery.Station("Station",
-                                    resources.getString(R.string.app_name),
-                                    resources.getString(R.string.app_url),
-                                    "",
-                                    resources.getString(R.string.app_description),
-                                    resources.getString(R.string.app_description))
-                            play()
-                        }
-                    }
-                });
-
         play_pause.setOnClickListener {
             if (isPlaying) {
                 stop()
@@ -129,9 +69,48 @@ class MainActivity : AppCompatActivity() {
 
         prepareSeekBar()
 
+        prepareAppSync()
+
+        if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
+        }
+
+        // query radio data
+        appSyncClient!!.query(StationQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(object : GraphQLCall.Callback<StationQuery.Data>() {
+                    override fun onResponse(response: Response<StationQuery.Data>) {
+                        this@MainActivity.runOnUiThread {
+                            Log.d(TAG, "StationQuery returned : " + response.data().toString())
+                            station = response.data()?.station()
+                            currentTrack = station!!.name()
+                            currentArtist = station!!.desc()
+                            preparePlayer()
+                        }
+                    }
+
+                    override fun onFailure(e: ApolloException) {
+                        this@MainActivity.runOnUiThread {
+                            Log.e(TAG, "Failed to perform StationQuery", e)
+                            station = StationQuery.Station("Station",
+                                    resources.getString(R.string.app_name),
+                                    resources.getString(R.string.app_url),
+                                    "",
+                                    resources.getString(R.string.app_description),
+                                    resources.getString(R.string.app_description))
+                            preparePlayer()
+                        }
+                    }
+                })
+
         //play() will be called when we will receive the StationQuery callback
     }
 
+    override fun onStart() {
+        Log.d(TAG, "onStart")
+        super.onStart()
+
+    }
 
     private fun prepareSeekBar() {
 
@@ -139,14 +118,14 @@ class MainActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= 24) {
                 volumeBar.setProgress(volumeBar.progress - 1, true)
             } else {
-                volumeBar.setProgress(volumeBar.progress - 1)
+                volumeBar.progress = volumeBar.progress - 1
             }
         }
         volumeUp.setOnClickListener {
             if (Build.VERSION.SDK_INT >= 24) {
                 volumeBar.setProgress(volumeBar.progress + 1, true)
             } else {
-                volumeBar.setProgress(volumeBar.progress + 1)
+                volumeBar.progress = volumeBar.progress + 1
             }
         }
 
@@ -177,72 +156,7 @@ class MainActivity : AppCompatActivity() {
         volumeBar.progress = (MAX_VOLUME + 0) / 2
     }
 
-    private fun updateTitle(artist : String, track : String) {
-        this@MainActivity.runOnUiThread {
-            this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
-            this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
-            this.artist.text = artist
-            currentArtist = artist
-            this.track.text = track
-            currentTrack = track
-
-            loadArtwork(currentArtist, currentTrack)
-        }
-    }
-
-    private fun loadArtwork(currentArtist : String, currentTrack: String) {
-
-        Log.d(TAG,"Loading artwork for current artist (%s) and track (%s)".format(currentArtist, currentTrack))
-        appSyncClient!!.query(ArtworkQuery.builder()
-                                        .artist(currentArtist)
-                                        .track(currentTrack)
-                                        .build())
-                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
-                .enqueue(object : GraphQLCall.Callback<ArtworkQuery.Data>() {
-                    override fun onResponse(response: Response<ArtworkQuery.Data>) {
-                        this@MainActivity.runOnUiThread {
-                            Log.d(TAG, "ArtworkQuery returned : " + response.data().toString());
-                            var url = response.data()!!.artwork()!!.url()!!
-//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
-                            Picasso.get().load(url).into(cover);
-                        }
-                    }
-
-                    override fun onFailure(e: ApolloException) {
-                        this@MainActivity.runOnUiThread {
-                            Log.e(TAG, "Failed to perform ArtworkQuery", e);
-//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
-                            cover.setImageResource(R.drawable.nocover_400x400)
-                        }
-                    }
-                });
-
-    }
-
-    private fun handleMetaData(metadata : String) {
-        var data = metadata.split(" - ")
-        Log.d(TAG, data.toString())
-        if (data.size < 2) {
-            data = metadata.split("-") // try without space
-            Log.d(TAG, data.toString())
-            if (data.size < 2) {
-                updateTitle(station!!.name(), metadata)
-            } else {
-                updateTitle(data[0], data[1])
-            }
-        } else {
-            updateTitle(data[0], data[1])
-        }
-    }
-
-    private fun play() {
-
-        if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
-            play_pause.setImageResource((R.drawable.ic_stop_black_24dp))
-        } else {
-            play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
-        }
-
+    private fun preparePlayer() {
         if (exoPlayer == null) {
             exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
                     DefaultRenderersFactory(applicationContext),
@@ -288,6 +202,92 @@ class MainActivity : AppCompatActivity() {
         // {@code onPlayerStateChanged} callback when the stream is ready to play
         exoPlayer?.prepare(mediaSource)
         exoPlayer?.playWhenReady = true
+
+    }
+
+    private fun prepareAppSync() {
+        // Initialize the Amazon Cognito credentials provider
+        val credentialsProvider = CognitoCachingCredentialsProvider(
+                applicationContext,
+                "eu-west-1:74b938b1-4a81-43ed-a4de-86b37001110a", // Identity pool ID
+                Regions.EU_WEST_1 // Region
+        )
+
+        // initialize the AppSync client
+        if (appSyncClient == null) {
+            appSyncClient = AWSAppSyncClient.builder()
+                    .context(applicationContext)
+                    .awsConfiguration(AWSConfiguration(applicationContext))
+                    .credentialsProvider(credentialsProvider)
+                    .build()
+        }
+
+
+    }
+
+    private fun updateTitle(artist : String, track : String) {
+        this@MainActivity.runOnUiThread {
+            this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
+            this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
+            this.artist.text = artist
+            currentArtist = artist
+            this.track.text = track
+            currentTrack = track
+
+            loadArtwork(currentArtist, currentTrack)
+        }
+    }
+
+    private fun loadArtwork(currentArtist : String, currentTrack: String) {
+
+        Log.d(TAG,"Loading artwork for current artist (%s) and track (%s)".format(currentArtist, currentTrack))
+        appSyncClient!!.query(ArtworkQuery.builder()
+                                        .artist(currentArtist)
+                                        .track(currentTrack)
+                                        .build())
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(object : GraphQLCall.Callback<ArtworkQuery.Data>() {
+                    override fun onResponse(response: Response<ArtworkQuery.Data>) {
+                        this@MainActivity.runOnUiThread {
+                            Log.d(TAG, "ArtworkQuery returned : " + response.data().toString())
+                            var url = response.data()!!.artwork()!!.url()!!
+//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
+                            Picasso.get().load(url).into(cover)
+                        }
+                    }
+
+                    override fun onFailure(e: ApolloException) {
+                        this@MainActivity.runOnUiThread {
+                            Log.e(TAG, "Failed to perform ArtworkQuery", e)
+//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
+                            cover.setImageResource(R.drawable.nocover_400x400)
+                        }
+                    }
+                })
+
+    }
+
+    private fun handleMetaData(metadata : String) {
+        var data = metadata.split(" - ")
+        Log.d(TAG, data.toString())
+        if (data.size < 2) {
+            data = metadata.split("-") // try without space
+            Log.d(TAG, data.toString())
+            if (data.size < 2) {
+                updateTitle(station!!.name(), metadata)
+            } else {
+                updateTitle(data[0], data[1])
+            }
+        } else {
+            updateTitle(data[0], data[1])
+        }
+    }
+
+    private fun play() {
+
+        if (exoPlayer == null) {
+            preparePlayer()
+        }
     }
 
     private fun stop() {
@@ -296,16 +296,24 @@ class MainActivity : AppCompatActivity() {
         } else {
             play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
         }
-        releaseResources(true)
+        releaseResources()
         isPlaying = false
         updateTitle(station!!.name(), station!!.desc())
     }
 
-    private fun releaseResources(releasePlayer: Boolean) {
-        Log.d(TAG, "releaseResources: releasePlayer=$releasePlayer")
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy")
+        stop()
+        releaseResources()
+    }
+
+    private fun releaseResources() {
+        Log.d(TAG, "releaseResources") //: releasePlayer=$releasePlayer")
 
         // Stops and releases player (if requested and available).
-        if (releasePlayer && exoPlayer != null) {
+        if (exoPlayer != null) {
             exoPlayer?.release()
             exoPlayer?.removeListener(exoPlayerEventListener)
             exoPlayer = null
@@ -325,8 +333,18 @@ class MainActivity : AppCompatActivity() {
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             Log.i(TAG, "onPlayerStateChanged: playWhenReady=$playWhenReady, playbackState=$playbackState")
             when (playbackState) {
-                Player.STATE_IDLE, Player.STATE_BUFFERING, Player.STATE_READY ->
+                Player.STATE_IDLE ->
+                    Log.d(TAG, "idle")
+
+                Player.STATE_BUFFERING, Player.STATE_READY -> {
+                    if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
+                        play_pause.setImageResource((R.drawable.ic_stop_black_24dp))
+                    } else {
+                        play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
+                    }
                     isPlaying = true
+                }
+
                 Player.STATE_ENDED ->
                     stop()
             }
