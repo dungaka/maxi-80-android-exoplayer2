@@ -1,0 +1,25 @@
+<resources>
+
+    <string name="app_name">Maxi 80</string>
+    <string name="app_description">La radio de toute une génération</string>
+    <string name="app_url">https://audio1.maxi80.com</string>
+
+
+    <string name="cover">Pas de pochette</string>
+    <string name="volume_up">Diminuer le volume</string>
+    <string name="volume_down">Augmenter le volume</string>
+    <string name="share">Partager</string>
+    <string name="info">Informations</string>
+
+    <string name="title_activity_about">A propos...</string>
+    <string name="website">Web</string>
+    <string name="donate">Supportez-nous</string>
+    <string name="copyright">Maxi 80 Android %s (%s)</string>
+    <string name="thanks">Basé ExoPlayer ICY extensions de saschpe@</string>
+
+    <string name="share_to">info@maxi80.com</string>
+    <string name="share_subject">Maxi80 sur Android</string>
+    <string name="share_text">J\'écoute %s par %s sur Maxi80.  Rejoignez-nous https://maxi80.com.</string>
+    <string name="share_title">Envoyer</string>
+
+</resources>

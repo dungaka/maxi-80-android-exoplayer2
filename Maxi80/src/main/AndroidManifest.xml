@@ -12,6 +12,15 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
+
+    <!--<compatible-screens>-->
+        <!--&lt;!&ndash; all normal size screens &ndash;&gt;-->
+        <!--<screen android:screenSize="normal" android:screenDensity="ldpi" />-->
+        <!--<screen android:screenSize="normal" android:screenDensity="mdpi" />-->
+        <!--<screen android:screenSize="normal" android:screenDensity="hdpi" />-->
+        <!--<screen android:screenSize="normal" android:screenDensity="xhdpi" />-->
+    <!--</compatible-screens>-->
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/appicon"

@@ -6,7 +6,9 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate
 import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -23,10 +25,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.experimental.CoroutineStart
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.async
 import okhttp3.OkHttpClient
 import saschpe.exoplayer2.ext.icy.IcyHttpDataSourceFactory
 import com.amazonaws.regions.Regions
@@ -37,7 +35,9 @@ import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
 import com.apollographql.apollo.GraphQLCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
+//import com.google.android.gms.security.ProviderInstaller
 import com.squareup.picasso.Picasso
+import javax.net.ssl.SSLContext
 
 
 /**
@@ -56,6 +56,22 @@ class MainActivity : AppCompatActivity() {
     private var station : StationQuery.Station? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d(TAG, "onCreate")
+
+        if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+
+//            try {
+//                ProviderInstaller.installIfNeeded(applicationContext)
+//                val sslContext: SSLContext
+//                sslContext = SSLContext.getInstance("TLSv1.2")
+//                sslContext.init(null, null, null)
+//                sslContext.createSSLEngine()
+//            } catch (e: Throwable) {
+//                Log.e(TAG, "Can not configure SSLContext", e)
+//            }
+        }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -90,14 +106,16 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     override fun onFailure(e: ApolloException) {
-                        Log.e(TAG, "Failed to perform StationQuery", e);
-                        station = StationQuery.Station("Station",
-                                resources.getString(R.string.app_name),
-                                resources.getString(R.string.app_url),
-                                "",
-                                resources.getString(R.string.app_description),
-                                resources.getString(R.string.app_description))
-                        play()
+                        this@MainActivity.runOnUiThread {
+                            Log.e(TAG, "Failed to perform StationQuery", e);
+                            station = StationQuery.Station("Station",
+                                    resources.getString(R.string.app_name),
+                                    resources.getString(R.string.app_url),
+                                    "",
+                                    resources.getString(R.string.app_description),
+                                    resources.getString(R.string.app_description))
+                            play()
+                        }
                     }
                 });
 
@@ -118,10 +136,18 @@ class MainActivity : AppCompatActivity() {
     private fun prepareSeekBar() {
 
         volumeDown.setOnClickListener {
-            volumeBar.setProgress(volumeBar.progress - 1, true)
+            if (Build.VERSION.SDK_INT >= 24) {
+                volumeBar.setProgress(volumeBar.progress - 1, true)
+            } else {
+                volumeBar.setProgress(volumeBar.progress - 1)
+            }
         }
         volumeUp.setOnClickListener {
-            volumeBar.setProgress(volumeBar.progress + 1, true)
+            if (Build.VERSION.SDK_INT >= 24) {
+                volumeBar.setProgress(volumeBar.progress + 1, true)
+            } else {
+                volumeBar.setProgress(volumeBar.progress + 1)
+            }
         }
 
         volumeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -210,7 +236,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun play() {
-        play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
+
+        if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
+            play_pause.setImageResource((R.drawable.ic_stop_black_24dp))
+        } else {
+            play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
+        }
 
         if (exoPlayer == null) {
             exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
@@ -231,7 +262,7 @@ class MainActivity : AppCompatActivity() {
         // the stream server supports it
         val client = OkHttpClient.Builder().build()
         val icyHttpDataSourceFactory = IcyHttpDataSourceFactory.Builder(client)
-                .setUserAgent(Util.getUserAgent(applicationContext, station!!.name()))
+                .setUserAgent(Util.getUserAgent(applicationContext, station?.name()))
                 .setIcyHeadersListener { icyHeaders ->
                     Log.d(TAG, "onIcyMetaData: icyHeaders=$icyHeaders")
                 }
@@ -251,7 +282,7 @@ class MainActivity : AppCompatActivity() {
         // The MediaSource represents the media to be played
         val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
                 .setExtractorsFactory(extractorsFactory)
-                .createMediaSource(Uri.parse(station!!.streamURL()))
+                .createMediaSource(Uri.parse(station?.streamURL()))
 
         // Prepares media to play (happens on background thread) and triggers
         // {@code onPlayerStateChanged} callback when the stream is ready to play
@@ -260,7 +291,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stop() {
-        play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
+        if (Build.VERSION.SDK_INT <= 20) {
+            play_pause.setImageResource((R.drawable.ic_play_arrow_black_24dp))
+        } else {
+            play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
+        }
         releaseResources(true)
         isPlaying = false
         updateTitle(station!!.name(), station!!.desc())
@@ -319,6 +354,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        private const val MINIMUM_SDK_FEATURES = 20
     }
 
 

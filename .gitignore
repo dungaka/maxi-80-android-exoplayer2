@@ -3,6 +3,7 @@
 **/amplify/*
 **/awsconfiguration.json
 keys/**
+Maxi80/release/**
 
 #Gradle
 .gradle/
