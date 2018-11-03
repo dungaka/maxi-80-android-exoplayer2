@@ -42,3 +42,16 @@ dependencies {
 //    androidTestImplementation 'com.android.support.test:runner:1.0.2'
 //    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
+
+// as per https://github.com/facebook/flipper/issues/146
+// fix a bunch of exceptions shown at startup
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        def requested = details.requested
+        if (requested.group == "com.android.support") {
+            if (!requested.name.startsWith("multidex")) {
+                details.useVersion "28.+"
+            }
+        }
+    }
+}
