@@ -173,8 +173,10 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= 26) {
             volumeBar.min = 0
         }
-        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
-        volumeBar.progress = currentVolume
+        // for some unknown reasons, the below always returns 0, so I will use 50% instead
+//        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+//        volumeBar.progress = currentVolume
+        volumeBar.progress = (MAX_VOLUME / 2)
 
         // capture system volume changes and report them back to our volume bar
         // https://stackoverflow.com/questions/6896746/is-there-a-broadcast-action-for-volume-changes
