@@ -6,7 +6,6 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDelegate
 import android.util.Log
@@ -35,13 +34,14 @@ import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
 import com.apollographql.apollo.GraphQLCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-//import com.google.android.gms.security.ProviderInstaller
 import com.squareup.picasso.Picasso
-import javax.net.ssl.SSLContext
+import java.security.KeyStore
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 
 
 /**
- * Test application, doesn't necessarily show the best way to do things.
+ * Maxi80 Main Activity
  */
 class MainActivity : AppCompatActivity() {
     private var exoPlayer: SimpleExoPlayer? = null
@@ -54,6 +54,12 @@ class MainActivity : AppCompatActivity() {
     private var appSyncClient: AWSAppSyncClient? = null
 
     private var station : StationQuery.Station? = null
+
+    /**************************************************************************
+     *
+     *  Application Lifecycle Management
+     *
+     *************************************************************************/
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -110,6 +116,24 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onStart")
         super.onStart()
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy")
+        stop()
+        releaseResources()
+    }
+
+    private fun releaseResources() {
+        Log.d(TAG, "releaseResources") //: releasePlayer=$releasePlayer")
+
+        // Stops and releases player (if requested and available).
+        if (exoPlayer != null) {
+            exoPlayer?.release()
+            exoPlayer?.removeListener(exoPlayerEventListener)
+            exoPlayer = null
+        }
     }
 
     private fun prepareSeekBar() {
@@ -206,6 +230,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun prepareAppSync() {
+
+
         // Initialize the Amazon Cognito credentials provider
         val credentialsProvider = CognitoCachingCredentialsProvider(
                 applicationContext,
@@ -213,17 +239,50 @@ class MainActivity : AppCompatActivity() {
                 Regions.EU_WEST_1 // Region
         )
 
-        // initialize the AppSync client
-        if (appSyncClient == null) {
-            appSyncClient = AWSAppSyncClient.builder()
-                    .context(applicationContext)
-                    .awsConfiguration(AWSConfiguration(applicationContext))
-                    .credentialsProvider(credentialsProvider)
-                    .build()
+
+        if (Build.VERSION.SDK_INT <= 20) {
+            // The below is required on Android API <= 20 to enable TLSv1.0 (SSLv3 is not supported)
+            // https://stackoverflow.com/questions/29249630/android-enable-tlsv1-2-in-okhttp
+            // https://github.com/square/okhttp/issues/1934
+            // https://stackoverflow.com/questions/31002159/now-that-sslsocketfactory-is-deprecated-on-android-what-would-be-the-best-way-t
+            val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            tmf.init(null as KeyStore?)
+
+            val tms = tmf.trustManagers
+            if (tms.size != 1 || tms[0] !is X509TrustManager) {
+                throw IllegalStateException("Unexpected default trust managers: $tms")
+            }
+            val tm = tms[0] as X509TrustManager
+
+            val okHTTPClient = OkHttpClient.Builder().sslSocketFactory(TLSSocketFactory(), tm).build()
+            // end of Android API <= 20 specific code
+
+            // initialize the AppSync client
+            if (appSyncClient == null) {
+                appSyncClient = AWSAppSyncClient.builder()
+                        .context(applicationContext)
+                        .awsConfiguration(AWSConfiguration(applicationContext))
+                        .credentialsProvider(credentialsProvider)
+                        .okHttpClient(okHTTPClient) // for android <= 20
+                        .build()
+            }
+        } else {
+            // initialize the AppSync client
+            if (appSyncClient == null) {
+                appSyncClient = AWSAppSyncClient.builder()
+                        .context(applicationContext)
+                        .awsConfiguration(AWSConfiguration(applicationContext))
+                        .credentialsProvider(credentialsProvider)
+                        .build()
+            }
         }
-
-
     }
+
+    /**************************************************************************
+     *
+     * Stream Meta Data Management & GUI refresh
+     *
+     *************************************************************************/
 
     private fun updateTitle(artist : String, track : String) {
         this@MainActivity.runOnUiThread {
@@ -283,6 +342,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**************************************************************************
+     *
+     *  Stream Control
+     *
+     *************************************************************************/
+
     private fun play() {
 
         if (exoPlayer == null) {
@@ -301,24 +366,39 @@ class MainActivity : AppCompatActivity() {
         updateTitle(station!!.name(), station!!.desc())
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy")
-        stop()
-        releaseResources()
+    companion object {
+        private const val TAG = "MainActivity"
+        private const val MINIMUM_SDK_FEATURES = 20
     }
 
-    private fun releaseResources() {
-        Log.d(TAG, "releaseResources") //: releasePlayer=$releasePlayer")
+    /**************************************************************************
+     *
+     *  UI Button Handler Control
+     *
+     *************************************************************************/
 
-        // Stops and releases player (if requested and available).
-        if (exoPlayer != null) {
-            exoPlayer?.release()
-            exoPlayer?.removeListener(exoPlayerEventListener)
-            exoPlayer = null
-        }
+
+    fun showAbout(view: View) {
+        val intent = Intent(this, AboutActivity::class.java)
+        startActivity(intent)
     }
+
+    fun showShare(view: View) {
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_EMAIL, resources.getString(R.string.share_to))
+        intent.putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.share_subject))
+        intent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text).format(currentTrack, currentArtist))
+
+        startActivity(Intent.createChooser(intent, resources.getString(R.string.share_title)))
+    }
+
+    /**************************************************************************
+     *
+     * Exo Player callback
+     *
+     *************************************************************************/
+
 
     private inner class ExoPlayerEventListener : Player.EventListener {
         override fun onTimelineChanged(timeline: Timeline, manifest: Any?, reason: Int) {
@@ -370,24 +450,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    companion object {
-        private const val TAG = "MainActivity"
-        private const val MINIMUM_SDK_FEATURES = 20
-    }
-
-
-    fun showAbout(view: View) {
-        val intent = Intent(this, AboutActivity::class.java)
-        startActivity(intent)
-    }
-
-    fun showShare(view: View) {
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.type = "text/plain"
-        intent.putExtra(Intent.EXTRA_EMAIL, resources.getString(R.string.share_to))
-        intent.putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.share_subject))
-        intent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text).format(currentTrack, currentArtist))
-
-        startActivity(Intent.createChooser(intent, resources.getString(R.string.share_title)))
-    }
 }
