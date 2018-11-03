@@ -84,12 +84,13 @@
             app:layout_constraintTop_toBottomOf="@+id/artist" />
 
         <ImageButton
-            android:id="@+id/share"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="20dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/share"
             android:onClick="showShare"
+            android:tint="@android:color/darker_gray"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/info"
             app:srcCompat="@drawable/ic_share_black_24dp" />
@@ -98,11 +99,12 @@
             android:id="@+id/info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="20dp"
             android:layout_marginEnd="32dp"
-            android:layout_marginRight="32dp"
-            android:layout_marginBottom="8dp"
+            android:background="@android:color/transparent"
             android:contentDescription="@string/info"
             android:onClick="showAbout"
+            android:tint="@android:color/darker_gray"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/ic_info_outline_black_24dp" />
