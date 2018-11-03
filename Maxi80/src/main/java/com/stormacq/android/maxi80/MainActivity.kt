@@ -2,10 +2,12 @@ package com.stormacq.android.maxi80
 
 import android.content.Context
 import android.content.Intent
+import android.database.ContentObserver
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDelegate
 import android.util.Log
@@ -155,15 +157,9 @@ class MainActivity : AppCompatActivity() {
 
         volumeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
-            override fun onStopTrackingTouch(seekBar: SeekBar) {
-                // TODO Auto-generated method stub
-
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar) {
-                // TODO Auto-generated method stub
-
-            }
+            // to fully implement the abstract class
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
 
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -177,7 +173,22 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= 26) {
             volumeBar.min = 0
         }
-        volumeBar.progress = (MAX_VOLUME + 0) / 2
+        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+        volumeBar.progress = currentVolume
+
+        // capture system volume changes and report them back to our volume bar
+        // https://stackoverflow.com/questions/6896746/is-there-a-broadcast-action-for-volume-changes
+        applicationContext.contentResolver.registerContentObserver(
+                android.provider.Settings.System.CONTENT_URI,
+                true,
+                object: ContentObserver(Handler()) {
+                    override fun onChange(selfChange: Boolean) {
+                        super.onChange(selfChange)
+                        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        volumeBar.progress = currentVolume
+                        Log.d(TAG, "Volume changed to $currentVolume")
+                    }
+                } )
     }
 
     private fun preparePlayer() {
@@ -310,7 +321,6 @@ class MainActivity : AppCompatActivity() {
                         this@MainActivity.runOnUiThread {
                             Log.d(TAG, "ArtworkQuery returned : " + response.data().toString())
                             var url = response.data()!!.artwork()!!.url()!!
-//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
                             Picasso.get().load(url).into(cover)
                         }
                     }
@@ -318,7 +328,6 @@ class MainActivity : AppCompatActivity() {
                     override fun onFailure(e: ApolloException) {
                         this@MainActivity.runOnUiThread {
                             Log.e(TAG, "Failed to perform ArtworkQuery", e)
-//                            cover.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in));
                             cover.setImageResource(R.drawable.nocover_400x400)
                         }
                     }
