@@ -38,6 +38,7 @@ import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import com.squareup.picasso.Picasso
 import java.security.KeyStore
+import java.util.*
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
@@ -64,7 +65,16 @@ class MainActivity : AppCompatActivity() {
      *************************************************************************/
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(TAG, "onCreate")
+
+        var primaryLocale: Locale
+        //check locale for debugging
+        if (Build.VERSION.SDK_INT >= 24) {
+            primaryLocale = applicationContext.resources.configuration.locales[0]
+        } else {
+            primaryLocale = applicationContext.resources.configuration.locale
+        }
+        Log.d(TAG, "onCreate, locale is ${primaryLocale}}")
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         play_pause.setOnClickListener {
@@ -378,7 +388,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val TAG = "MainActivity"
+        private const val TAG = "Maxi80_MainActivity"
         private const val MINIMUM_SDK_FEATURES = 20
     }
 

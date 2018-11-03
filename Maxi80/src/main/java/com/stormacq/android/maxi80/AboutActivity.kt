@@ -11,8 +11,6 @@ import android.net.Uri
 
 class AboutActivity : AppCompatActivity() {
 
-    private val TAG = "AboutActivity"
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_about)
@@ -35,5 +33,9 @@ class AboutActivity : AppCompatActivity() {
         startActivity(browserIntent)
     }
 
+    companion object {
+        private const val TAG = "Maxi80_AboutActivity"
+        private const val MINIMUM_SDK_FEATURES = 20
+    }
 
 }
