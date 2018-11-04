@@ -10,8 +10,8 @@ android {
         applicationId "com.stormacq.android.maxi80"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 2018110400
-        versionName "v2.0.4"
+        versionCode 2018110401
+        versionName "v2.0.5"
         vectorDrawables {
             useSupportLibrary true
         }
