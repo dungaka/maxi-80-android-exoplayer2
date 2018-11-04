@@ -27,31 +27,31 @@ class TLSSocketFactory : SSLSocketFactory()  {
         return internalSSLSocketFactory.supportedCipherSuites
     }
 
-    override fun  createSocket() : Socket  {
+    override fun  createSocket() : Socket?  {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket())
     }
 
-    override fun createSocket(s: Socket, host: String, port: Int, autoClose: Boolean) : Socket {
+    override fun createSocket(s: Socket, host: String, port: Int, autoClose: Boolean) : Socket? {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(s, host, port, autoClose))
     }
 
-    override fun  createSocket(host: String, port: Int) : Socket {
+    override fun  createSocket(host: String, port: Int) : Socket? {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
     }
 
-    override fun createSocket(host: String, port: Int, localHost: InetAddress, localPort: Int) : Socket {
+    override fun createSocket(host: String, port: Int, localHost: InetAddress, localPort: Int) : Socket? {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port, localHost, localPort));
     }
 
-    override fun createSocket(host: InetAddress, port: Int) : Socket {
+    override fun createSocket(host: InetAddress, port: Int) : Socket? {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
     }
 
-    override fun createSocket(address: InetAddress, port: Int, localAddress: InetAddress, localPort: Int) : Socket {
+    override fun createSocket(address: InetAddress, port: Int, localAddress: InetAddress, localPort: Int) : Socket? {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(address, port, localAddress, localPort));
     }
 
-    private fun  enableTLSOnSocket(socket: Socket) : Socket {
+    private fun  enableTLSOnSocket(socket: Socket?) : Socket? {
         if(socket != null && (socket is SSLSocket)) {
             socket.enabledProtocols = arrayOf("TLSv1.1", "TLSv1.2")
         }
