@@ -23,19 +23,18 @@ class AboutActivity : AppCompatActivity() {
         app_copyright.text = resources.getString(R.string.copyright).format(versionName, versionCode)
     }
 
-    fun showWebsite(view : View) {
+    fun showWebsite(@Suppress("UNUSED_PARAMETER") view : View) {
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maxi80.com"))
         startActivity(browserIntent)
     }
 
-    fun showDonate(view : View) {
+    fun showDonate(@Suppress("UNUSED_PARAMETER") view : View) {
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.maxi80.com/paypal.htm"))
         startActivity(browserIntent)
     }
 
     companion object {
         private const val TAG = "Maxi80_AboutActivity"
-        private const val MINIMUM_SDK_FEATURES = 20
     }
 
 }
