@@ -149,13 +149,22 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
 
     override fun onCurrentTrackChanged(artist: String, track: String) {
 
-        this@MainActivity.runOnUiThread {
-            val app = application as Maxi80Application
-            this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
-            this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
-            this.artist.text = app.currentArtist
-            this.track.text = app.currentTrack
-            loadArtwork()
+        val app = application as Maxi80Application
+
+        // avoid refreshing at app start, when we receive radio sttaion data
+        if (app.isPlaying) {
+            this@MainActivity.runOnUiThread {
+                this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
+                this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
+                this.artist.text = app.currentArtist
+                this.track.text = app.currentTrack
+                loadArtwork()
+            }
+        } else {
+            // when we receive meta data and the app is not playing, it means we just receive the radio name
+            // let's play
+            // this is made possible because we change the isPlaying flag as soon as the player is buffering.
+            play()
         }
     }
 

@@ -135,16 +135,19 @@ class StreamingService() : Service() {
 
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             Log.i(TAG, "onPlayerStateChanged: playWhenReady=$playWhenReady, playbackState=$playbackState")
+            val app = application as Maxi80Application
             when (playbackState) {
                 Player.STATE_IDLE ->
                     Log.d(TAG, "player idle")
 
                 Player.STATE_BUFFERING -> {
                     Log.d(TAG, "player buffering")
+                    // hack to ensure isPlaying is set early (otherwise we might receive and process
+                    // metadata when isPlaying is false, causing the cover to not refresh
+                    app.isPlaying = true
                 }
                 Player.STATE_READY -> {
                     Log.d(TAG, "player ready")
-                    val app = application as Maxi80Application
                     app.isPlaying = true
                 }
 
