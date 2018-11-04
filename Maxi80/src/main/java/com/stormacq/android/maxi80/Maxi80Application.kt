@@ -123,7 +123,7 @@ class Maxi80Application : Application() {
             val serviceChannel = NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
                     resources.getString(R.string.app_name),
-                    NotificationManager.IMPORTANCE_DEFAULT)
+                    NotificationManager.IMPORTANCE_LOW)
             val manager : NotificationManager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
         }
