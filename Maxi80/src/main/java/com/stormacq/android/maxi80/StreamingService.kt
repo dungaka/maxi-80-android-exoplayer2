@@ -1,5 +1,7 @@
 package com.stormacq.android.maxi80
 
+import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.net.Uri
@@ -22,7 +24,6 @@ class StreamingService() : Service() {
 
     private var exoPlayer: SimpleExoPlayer? = null
     private val exoPlayerEventListener = ExoPlayerEventListener()
-    private var streamURI: String? = null
 
     override fun onBind(intent: Intent?): IBinder? {
         Log.d(TAG, "onBind")
@@ -36,9 +37,27 @@ class StreamingService() : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand")
+        Log.d(TAG, "onStartCommand : ${intent.toString()}")
+
+        val app = application as Maxi80Application
+
+        if (Build.VERSION.SDK_INT >= 26) {
+
+            val notificationIntent = Intent(this, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+
+            val notification = Notification.Builder(applicationContext, Maxi80Application.NOTIFICATION_CHANNEL_ID)
+                    .setContentText(app.station.name())
+                    .setContentText(app.station.desc())
+                    .setSmallIcon(R.drawable.ic_radio_black_24dp)
+                    .setContentIntent(pendingIntent)
+                    .build()
+
+            startForeground(1, notification)
+        }
         preparePlayer()
-        return super.onStartCommand(intent, flags, startId)
+
+        return START_REDELIVER_INTENT
     }
 
     override fun onDestroy() {
@@ -88,7 +107,7 @@ class StreamingService() : Service() {
         // The MediaSource represents the media to be played
         val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
                 .setExtractorsFactory(extractorsFactory)
-                .createMediaSource(Uri.parse(streamURI ?: "https://audio1.maxi80.com"))
+                .createMediaSource(Uri.parse(app.station.streamURL()))
 
         // Prepares media to play (happens on background thread) and triggers
         // {@code onPlayerStateChanged} callback when the stream is ready to play

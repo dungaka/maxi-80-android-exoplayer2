@@ -1,6 +1,8 @@
 package com.stormacq.android.maxi80
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.os.Build
 import android.util.Log
 import com.amazonaws.amplify.generated.graphql.StationQuery
@@ -36,6 +38,13 @@ class Maxi80Application : Application() {
 
     var isPlaying = false
 
+    /**************************************************************************
+     *
+     *  Lifecycle
+     *
+     *************************************************************************/
+
+
     override fun onCreate() {
         Log.d(TAG, "onCreate")
         super.onCreate()
@@ -62,6 +71,8 @@ class Maxi80Application : Application() {
         prepareAppSync()
 
         queryRadioData()
+
+        prepareNotificationChannel()
 
     }
 
@@ -106,6 +117,18 @@ class Maxi80Application : Application() {
         appSyncClient = builder.build()
     }
 
+    private fun prepareNotificationChannel() {
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            val serviceChannel = NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    resources.getString(R.string.app_name),
+                    NotificationManager.IMPORTANCE_DEFAULT)
+            val manager : NotificationManager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(serviceChannel)
+        }
+    }
+
     private fun queryRadioData() {
 
         // query radio data
@@ -125,6 +148,13 @@ class Maxi80Application : Application() {
                 })
     }
 
+
+    /**************************************************************************
+     *
+     *  Meta Data
+     *
+     *************************************************************************/
+
     fun setTrack(artist: String?, track: String?) {
         val _artist = artist ?: station.name()
         val _track = track ?: station.desc()
@@ -134,6 +164,8 @@ class Maxi80Application : Application() {
 
         metaDataChangedListener?.onCurrentTrackChanged(currentArtist, currentTrack)
     }
+
+
 
     // callback to receive metadata
     fun handleiCyMetaData(metadata : String) {
@@ -159,6 +191,7 @@ class Maxi80Application : Application() {
 
     companion object {
         private const val TAG = "Maxi80_Application"
+        const val NOTIFICATION_CHANNEL_ID = "com.stormacq.android.maxi80"
         const val MINIMUM_SDK_FEATURES = 20
     }
 }

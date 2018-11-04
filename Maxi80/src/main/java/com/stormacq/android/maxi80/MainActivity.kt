@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
             AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         }
 
-        //play() will be called when we will receive the StationQuery callback
+        //play() will be called when we will receive the StationQuery callback => onCurrentTrackChanged
     }
 
     override fun onStart() {
@@ -229,8 +229,16 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
 
         setStopIcon()
 
-        Intent(this, StreamingService::class.java).also { intent ->
-            startService(intent)
+        // as per https://developer.android.com/about/versions/oreo/background
+        if (Build.VERSION.SDK_INT >= 26) {
+            Intent(this, StreamingService::class.java).also { intent ->
+                startForegroundService(intent)
+            }
+
+        } else {
+            Intent(this, StreamingService::class.java).also { intent ->
+                startService(intent)
+            }
         }
     }
 
