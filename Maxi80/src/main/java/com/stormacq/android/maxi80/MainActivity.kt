@@ -28,6 +28,8 @@ import com.squareup.picasso.Picasso
 class MainActivity : AppCompatActivity(), MetaDataListener {
 
 
+    private lateinit var contentObserver: VolumeContentObserver
+
     /**************************************************************************
      *
      *  Application Lifecycle Management
@@ -87,7 +89,7 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
-//        stop()
+        applicationContext.contentResolver.unregisterContentObserver(contentObserver)
     }
 
 
@@ -133,17 +135,11 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
 
         // capture system volume changes and report them back to our volume bar
         // https://stackoverflow.com/questions/6896746/is-there-a-broadcast-action-for-volume-changes
+        contentObserver = VolumeContentObserver(Handler())
         applicationContext.contentResolver.registerContentObserver(
                 android.provider.Settings.System.CONTENT_URI,
                 true,
-                object: ContentObserver(Handler()) {
-                    override fun onChange(selfChange: Boolean) {
-                        super.onChange(selfChange)
-                        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
-                        volumeBar.progress = currentVolume
-                        Log.d(TAG, "Volume changed to $currentVolume")
-                    }
-                } )
+                contentObserver )
     }
 
 
@@ -277,6 +273,24 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
         intent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text).format(app.currentTrack, app.currentArtist))
 
         startActivity(Intent.createChooser(intent, resources.getString(R.string.share_title)))
+    }
+
+
+    /**************************************************************************
+     *
+     *  Sync volume bar with device's volume button
+     *
+     *************************************************************************/
+
+    private inner class VolumeContentObserver(handler : Handler) : ContentObserver(handler) {
+
+        override fun onChange(selfChange: Boolean) {
+            super.onChange(selfChange)
+            val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+            volumeBar.progress = currentVolume
+            Log.d(TAG, "Volume changed to $currentVolume")
+        }
     }
 
 }
