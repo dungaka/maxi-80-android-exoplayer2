@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.database.ContentObserver
 import android.media.AudioManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -15,48 +14,19 @@ import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.SeekBar
 import com.amazonaws.amplify.generated.graphql.ArtworkQuery
-import com.amazonaws.amplify.generated.graphql.StationQuery
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
-import com.google.android.exoplayer2.source.ExtractorMediaSource
-import com.google.android.exoplayer2.source.TrackGroupArray
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
 import kotlinx.android.synthetic.main.activity_main.*
-import okhttp3.OkHttpClient
-import saschpe.exoplayer2.ext.icy.IcyHttpDataSourceFactory
-import com.amazonaws.regions.Regions
-import com.amazonaws.auth.CognitoCachingCredentialsProvider
-import com.amazonaws.mobile.config.AWSConfiguration
-import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers
 import com.apollographql.apollo.GraphQLCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import com.squareup.picasso.Picasso
-import java.security.KeyStore
-import java.util.*
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509TrustManager
 
 
 /**
  * Maxi80 Main Activity
  */
-class MainActivity : AppCompatActivity() {
-    private var exoPlayer: SimpleExoPlayer? = null
-    private val exoPlayerEventListener = ExoPlayerEventListener()
-    private var isPlaying = false
+class MainActivity : AppCompatActivity(), MetaDataListener {
 
-    private var currentArtist : String = ""
-    private var currentTrack : String = ""
-
-    private var appSyncClient: AWSAppSyncClient? = null
-
-    private var station : StationQuery.Station? = null
 
     /**************************************************************************
      *
@@ -65,20 +35,16 @@ class MainActivity : AppCompatActivity() {
      *************************************************************************/
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        var primaryLocale: Locale
-        //check locale for debugging
-        if (Build.VERSION.SDK_INT >= 24) {
-            primaryLocale = applicationContext.resources.configuration.locales[0]
-        } else {
-            primaryLocale = applicationContext.resources.configuration.locale
-        }
-        Log.d(TAG, "onCreate, locale is ${primaryLocale}}")
-
         super.onCreate(savedInstanceState)
+
+        // register ourself to receive track change notifications
+        val app = application as Maxi80Application
+        app.metaDataChangedListener = this
+
         setContentView(R.layout.activity_main)
+
         play_pause.setOnClickListener {
-            if (isPlaying) {
+            if (app.isPlaying) {
                 stop()
             } else {
                 play()
@@ -87,66 +53,43 @@ class MainActivity : AppCompatActivity() {
 
         prepareSeekBar()
 
-        prepareAppSync()
-
-        if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
+        if (Build.VERSION.SDK_INT <= Maxi80Application.MINIMUM_SDK_FEATURES) {
             AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         }
-
-        // query radio data
-        appSyncClient!!.query(StationQuery.builder().build())
-                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
-                .enqueue(object : GraphQLCall.Callback<StationQuery.Data>() {
-                    override fun onResponse(response: Response<StationQuery.Data>) {
-                        this@MainActivity.runOnUiThread {
-                            Log.d(TAG, "StationQuery returned : " + response.data().toString())
-                            station = response.data()?.station()
-                            currentTrack = station!!.name()
-                            currentArtist = station!!.desc()
-                            preparePlayer()
-                        }
-                    }
-
-                    override fun onFailure(e: ApolloException) {
-                        this@MainActivity.runOnUiThread {
-                            Log.e(TAG, "Failed to perform StationQuery", e)
-                            station = StationQuery.Station("Station",
-                                    resources.getString(R.string.app_name),
-                                    resources.getString(R.string.app_url),
-                                    "",
-                                    resources.getString(R.string.app_description),
-                                    resources.getString(R.string.app_description))
-                            preparePlayer()
-                        }
-                    }
-                })
 
         //play() will be called when we will receive the StationQuery callback
     }
 
     override fun onStart() {
-        Log.d(TAG, "onStart")
         super.onStart()
+        Log.d(TAG, "onStart")
 
+        val app = application as Maxi80Application
+
+        // force update the start / stop button
+        if (app.isPlaying) {
+            setStopIcon()
+        } else {
+            setStartIcon()
+        }
+
+        // force update the artwork
+        if (app.isPlaying) {
+            onCurrentTrackChanged(app.currentArtist, app.currentTrack)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(TAG, "onStop")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy")
-        stop()
-        releaseResources()
+//        stop()
     }
 
-    private fun releaseResources() {
-        Log.d(TAG, "releaseResources") //: releasePlayer=$releasePlayer")
-
-        // Stops and releases player (if requested and available).
-        if (exoPlayer != null) {
-            exoPlayer?.release()
-            exoPlayer?.removeListener(exoPlayerEventListener)
-            exoPlayer = null
-        }
-    }
 
     private fun prepareSeekBar() {
 
@@ -184,8 +127,8 @@ class MainActivity : AppCompatActivity() {
             volumeBar.min = 0
         }
         // for some unknown reasons, the below always returns 0, so I will use 50% instead
-//        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
-//        volumeBar.progress = currentVolume
+        // val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+        // volumeBar.progress = currentVolume
         volumeBar.progress = (MAX_VOLUME / 2)
 
         // capture system volume changes and report them back to our volume bar
@@ -203,129 +146,26 @@ class MainActivity : AppCompatActivity() {
                 } )
     }
 
-    private fun preparePlayer() {
-        if (exoPlayer == null) {
-            exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
-                    DefaultRenderersFactory(applicationContext),
-                    DefaultTrackSelector(),
-                    DefaultLoadControl()
-            )
-            exoPlayer?.addListener(exoPlayerEventListener)
-        }
 
-        val audioAttributes = AudioAttributes.Builder()
-                .setContentType(C.CONTENT_TYPE_MUSIC)
-                .setUsage(C.USAGE_MEDIA)
-                .build()
-        exoPlayer?.audioAttributes = audioAttributes
+    override fun onCurrentTrackChanged(artist: String, track: String) {
 
-        // Custom HTTP data source factory which requests Icy metadata and parses it if
-        // the stream server supports it
-        val client = OkHttpClient.Builder().build()
-        val icyHttpDataSourceFactory = IcyHttpDataSourceFactory.Builder(client)
-                .setUserAgent(Util.getUserAgent(applicationContext, station?.name()))
-                .setIcyHeadersListener { icyHeaders ->
-                    Log.d(TAG, "onIcyMetaData: icyHeaders=$icyHeaders")
-                }
-                .setIcyMetadataChangeListener { icyMetadata ->
-                    Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
-                    handleMetaData(icyMetadata.streamTitle)
-                }
-                .build()
-
-        // Produces DataSource instances through which media data is loaded
-        val dataSourceFactory = DefaultDataSourceFactory(
-                applicationContext, null, icyHttpDataSourceFactory
-        )
-        // Produces Extractor instances for parsing the media data
-        val extractorsFactory = DefaultExtractorsFactory()
-
-        // The MediaSource represents the media to be played
-        val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
-                .setExtractorsFactory(extractorsFactory)
-                .createMediaSource(Uri.parse(station?.streamURL()))
-
-        // Prepares media to play (happens on background thread) and triggers
-        // {@code onPlayerStateChanged} callback when the stream is ready to play
-        exoPlayer?.prepare(mediaSource)
-        exoPlayer?.playWhenReady = true
-
-    }
-
-    private fun prepareAppSync() {
-
-
-        // Initialize the Amazon Cognito credentials provider
-        val credentialsProvider = CognitoCachingCredentialsProvider(
-                applicationContext,
-                "eu-west-1:74b938b1-4a81-43ed-a4de-86b37001110a", // Identity pool ID
-                Regions.EU_WEST_1 // Region
-        )
-
-
-        if (Build.VERSION.SDK_INT <= 20) {
-            // The below is required on Android API <= 20 to enable TLSv1.0 (SSLv3 is not supported)
-            // https://stackoverflow.com/questions/29249630/android-enable-tlsv1-2-in-okhttp
-            // https://github.com/square/okhttp/issues/1934
-            // https://stackoverflow.com/questions/31002159/now-that-sslsocketfactory-is-deprecated-on-android-what-would-be-the-best-way-t
-            val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-            tmf.init(null as KeyStore?)
-
-            val tms = tmf.trustManagers
-            if (tms.size != 1 || tms[0] !is X509TrustManager) {
-                throw IllegalStateException("Unexpected default trust managers: $tms")
-            }
-            val tm = tms[0] as X509TrustManager
-
-            val okHTTPClient = OkHttpClient.Builder().sslSocketFactory(TLSSocketFactory(), tm).build()
-            // end of Android API <= 20 specific code
-
-            // initialize the AppSync client
-            if (appSyncClient == null) {
-                appSyncClient = AWSAppSyncClient.builder()
-                        .context(applicationContext)
-                        .awsConfiguration(AWSConfiguration(applicationContext))
-                        .credentialsProvider(credentialsProvider)
-                        .okHttpClient(okHTTPClient) // for android <= 20
-                        .build()
-            }
-        } else {
-            // initialize the AppSync client
-            if (appSyncClient == null) {
-                appSyncClient = AWSAppSyncClient.builder()
-                        .context(applicationContext)
-                        .awsConfiguration(AWSConfiguration(applicationContext))
-                        .credentialsProvider(credentialsProvider)
-                        .build()
-            }
-        }
-    }
-
-    /**************************************************************************
-     *
-     * Stream Meta Data Management & GUI refresh
-     *
-     *************************************************************************/
-
-    private fun updateTitle(artist : String, track : String) {
         this@MainActivity.runOnUiThread {
+            val app = application as Maxi80Application
             this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
             this.track.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
-            this.artist.text = artist
-            currentArtist = artist
-            this.track.text = track
-            currentTrack = track
-
-            loadArtwork(currentArtist, currentTrack)
+            this.artist.text = app.currentArtist
+            this.track.text = app.currentTrack
+            loadArtwork()
         }
     }
 
-    private fun loadArtwork(currentArtist : String, currentTrack: String) {
+    private fun loadArtwork() {
+        val app = application as Maxi80Application
 
-        Log.d(TAG,"Loading artwork for current artist (%s) and track (%s)".format(currentArtist, currentTrack))
-        appSyncClient!!.query(ArtworkQuery.builder()
-                                        .artist(currentArtist)
-                                        .track(currentTrack)
+        Log.d(TAG,"Loading artwork for current artist (%s) and track (%s)".format(app.currentArtist, app.currentTrack))
+        app.appSyncClient.query(ArtworkQuery.builder()
+                                        .artist(app.currentArtist)
+                                        .track(app.currentTrack)
                                         .build())
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueue(object : GraphQLCall.Callback<ArtworkQuery.Data>() {
@@ -347,49 +187,63 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun handleMetaData(metadata : String) {
-        var data = metadata.split(" - ")
-        Log.d(TAG, data.toString())
-        if (data.size < 2) {
-            data = metadata.split("-") // try without space
-            Log.d(TAG, data.toString())
-            if (data.size < 2) {
-                updateTitle(station!!.name(), metadata)
-            } else {
-                updateTitle(data[0], data[1])
-            }
-        } else {
-            updateTitle(data[0], data[1])
-        }
-    }
-
     /**************************************************************************
      *
      *  Stream Control
      *
      *************************************************************************/
 
-    private fun play() {
+    private fun setStopIcon() {
 
-        if (exoPlayer == null) {
-            preparePlayer()
+        // not always necessary, but just to be sure
+        this@MainActivity.runOnUiThread {
+
+            if (Build.VERSION.SDK_INT <= Maxi80Application.MINIMUM_SDK_FEATURES) {
+                play_pause.setImageResource((R.drawable.ic_stop_black_24dp))
+            } else {
+                play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
+            }
+        }
+    }
+
+    private fun setStartIcon() {
+
+        // not always necessary, but just to be sure
+        this@MainActivity.runOnUiThread {
+
+            if (Build.VERSION.SDK_INT <= Maxi80Application.MINIMUM_SDK_FEATURES) {
+                play_pause.setImageResource((R.drawable.ic_play_arrow_black_24dp))
+            } else {
+                play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
+            }
+        }
+    }
+
+    private fun play() {
+        Log.d(TAG, "Play")
+
+        setStopIcon()
+
+        Intent(this, StreamingService::class.java).also { intent ->
+            startService(intent)
         }
     }
 
     private fun stop() {
-        if (Build.VERSION.SDK_INT <= 20) {
-            play_pause.setImageResource((R.drawable.ic_play_arrow_black_24dp))
-        } else {
-            play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_play_arrow_black_24dp, null))
+        Log.d(TAG, "Stop")
+
+        setStartIcon()
+
+        Intent(this, StreamingService::class.java).also { intent ->
+            stopService(intent)
         }
-        releaseResources()
-        isPlaying = false
-        updateTitle(station!!.name(), station!!.desc())
+
+        val app = application as Maxi80Application
+        app.setTrack(null, null )
     }
 
     companion object {
         private const val TAG = "Maxi80_MainActivity"
-        private const val MINIMUM_SDK_FEATURES = 20
     }
 
     /**************************************************************************
@@ -399,76 +253,21 @@ class MainActivity : AppCompatActivity() {
      *************************************************************************/
 
 
-    fun showAbout(view: View) {
+    fun showAbout(@Suppress("UNUSED_PARAMETER") view: View) {
         val intent = Intent(this, AboutActivity::class.java)
         startActivity(intent)
     }
 
-    fun showShare(view: View) {
+    fun showShare(@Suppress("UNUSED_PARAMETER") view: View) {
+        val app = application as Maxi80Application
+
         val intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"
         intent.putExtra(Intent.EXTRA_EMAIL, resources.getString(R.string.share_to))
         intent.putExtra(Intent.EXTRA_SUBJECT, resources.getString(R.string.share_subject))
-        intent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text).format(currentTrack, currentArtist))
+        intent.putExtra(Intent.EXTRA_TEXT, resources.getString(R.string.share_text).format(app.currentTrack, app.currentArtist))
 
         startActivity(Intent.createChooser(intent, resources.getString(R.string.share_title)))
-    }
-
-    /**************************************************************************
-     *
-     * Exo Player callback
-     *
-     *************************************************************************/
-
-
-    private inner class ExoPlayerEventListener : Player.EventListener {
-        override fun onTimelineChanged(timeline: Timeline, manifest: Any?, reason: Int) {
-        }
-
-        override fun onTracksChanged(trackGroups: TrackGroupArray, trackSelections: TrackSelectionArray) {
-        }
-
-        override fun onLoadingChanged(isLoading: Boolean) {
-        }
-
-        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-            Log.i(TAG, "onPlayerStateChanged: playWhenReady=$playWhenReady, playbackState=$playbackState")
-            when (playbackState) {
-                Player.STATE_IDLE ->
-                    Log.d(TAG, "idle")
-
-                Player.STATE_BUFFERING, Player.STATE_READY -> {
-                    if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
-                        play_pause.setImageResource((R.drawable.ic_stop_black_24dp))
-                    } else {
-                        play_pause.setImageDrawable(resources.getDrawable(R.drawable.ic_stop_black_24dp, null))
-                    }
-                    isPlaying = true
-                }
-
-                Player.STATE_ENDED ->
-                    stop()
-            }
-        }
-
-        override fun onPlayerError(error: ExoPlaybackException) {
-            Log.e(TAG, "onPlayerError: error=$error")
-        }
-
-        override fun onPositionDiscontinuity(reason: Int) {
-        }
-
-        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
-        }
-
-        override fun onSeekProcessed() {
-        }
-
-        override fun onRepeatModeChanged(repeatMode: Int) {
-        }
-
-        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-        }
     }
 
 }
