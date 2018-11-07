@@ -21,7 +21,6 @@ import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
 import com.squareup.picasso.Picasso
 
-
 /**
  * Maxi80 Main Activity
  */
@@ -117,8 +116,11 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
 
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                am.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+                Log.d(TAG, "volume bar changed, progress = (%d).  From user = (%b)".format(progress, fromUser))
+                if (fromUser) {
+                    val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                    am.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+                }
             }
         })
 
@@ -128,10 +130,11 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
         if (Build.VERSION.SDK_INT >= 26) {
             volumeBar.min = 0
         }
-        // for some unknown reasons, the below always returns 0, so I will use 50% instead
-        // val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
-        // volumeBar.progress = currentVolume
-        volumeBar.progress = (MAX_VOLUME / 2)
+
+        // initialise with current volume
+        val currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+        Log.d(TAG, "initial volume reported to be (%d)".format(currentVolume))
+        volumeBar.progress = currentVolume
 
         // capture system volume changes and report them back to our volume bar
         // https://stackoverflow.com/questions/6896746/is-there-a-broadcast-action-for-volume-changes
