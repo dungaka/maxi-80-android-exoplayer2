@@ -11,19 +11,6 @@
         android:background="@drawable/background"
         tools:context=".MainActivity">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/play_pause"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center"
-            android:layout_margin="0dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:fabSize="normal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cover"
-            app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
 
         <ImageView
             android:id="@+id/cover"
@@ -38,21 +25,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/nocover_400x400" />
 
-        <ImageView
-            android:id="@+id/logo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginLeft="32dp"
-            android:layout_marginBottom="20dp"
-            android:contentDescription="@string/app_name"
-            android:scaleType="center"
-            android:scaleX="1.4"
-            android:scaleY="1.4"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@drawable/logo_small" />
-
         <TextView
             android:id="@+id/artist"
             android:layout_width="wrap_content"
@@ -66,7 +38,7 @@
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/volumeBar" />
+            app:layout_constraintTop_toBottomOf="@+id/cover" />
 
         <TextView
             android:id="@+id/track"
@@ -83,31 +55,19 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/artist" />
 
-        <ImageButton
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/play_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/share"
-            android:onClick="showShare"
-            android:tint="@android:color/darker_gray"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/info"
-            app:srcCompat="@drawable/ic_share_black_24dp" />
-
-        <ImageButton
-            android:id="@+id/info"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:layout_marginEnd="32dp"
-            android:background="@android:color/transparent"
-            android:contentDescription="@string/info"
-            android:onClick="showAbout"
-            android:tint="@android:color/darker_gray"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_gravity="bottom|center"
+            android:layout_margin="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:fabSize="normal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/ic_info_outline_black_24dp" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/track"
+            app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
 
         <ImageButton
             android:id="@+id/volumeDown"
@@ -147,6 +107,50 @@
             app:layout_constraintEnd_toStartOf="@+id/volumeUp"
             app:layout_constraintStart_toEndOf="@+id/volumeDown"
             app:layout_constraintTop_toBottomOf="@+id/play_pause" />
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginLeft="32dp"
+            android:layout_marginBottom="20dp"
+            android:contentDescription="@string/app_name"
+            android:scaleType="center"
+            android:scaleX="1.4"
+            android:scaleY="1.4"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/logo_small" />
+
+        <ImageButton
+            android:id="@+id/share"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/share"
+            android:onClick="showShare"
+            android:tint="@android:color/darker_gray"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/info"
+            app:srcCompat="@drawable/ic_share_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginRight="32dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/info"
+            android:onClick="showAbout"
+            android:tint="@android:color/darker_gray"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/ic_info_outline_black_24dp" />
+
 
     </android.support.constraint.ConstraintLayout>
 

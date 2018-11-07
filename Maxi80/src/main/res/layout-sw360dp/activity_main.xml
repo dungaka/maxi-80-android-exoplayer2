@@ -11,20 +11,6 @@
         android:background="@drawable/background"
         tools:context=".MainActivity">
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/play_pause"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center"
-            android:layout_margin="20dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:fabSize="normal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cover"
-            app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
-
         <ImageView
             android:id="@+id/cover"
             android:layout_width="350dp"
@@ -35,35 +21,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/nocover_400x400" />
-
-        <ImageView
-            android:id="@+id/logo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="28dp"
-            android:layout_marginBottom="20dp"
-            android:contentDescription="@string/app_name"
-            android:scaleType="center"
-            android:scaleX="1.4"
-            android:scaleY="1.4"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@drawable/logo_small" />
-
-        <SeekBar
-            android:id="@+id/volumeBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="50dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginRight="50dp"
-            android:padding="8dp"
-            android:thumbTint="?attr/colorAccent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintLeft_toRightOf="@id/volumeDown"
-            app:layout_constraintRight_toLeftOf="@id/volumeUp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/play_pause" />
 
         <TextView
             android:id="@+id/artist"
@@ -78,7 +35,7 @@
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/volumeBar" />
+            app:layout_constraintTop_toBottomOf="@+id/cover" />
 
         <TextView
             android:id="@+id/track"
@@ -94,6 +51,35 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/artist" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/play_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_margin="20dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:fabSize="normal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/track"
+            app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
+
+        <SeekBar
+            android:id="@+id/volumeBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="50dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginRight="50dp"
+            android:padding="8dp"
+            android:thumbTint="?attr/colorAccent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/volumeDown"
+            app:layout_constraintRight_toLeftOf="@id/volumeUp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/play_pause" />
 
         <ImageButton
             android:id="@+id/volumeDown"
@@ -122,6 +108,20 @@
             app:layout_constraintStart_toEndOf="@id/volumeBar"
             app:layout_constraintTop_toBottomOf="@+id/play_pause"
             app:srcCompat="@drawable/ic_volume_up_black_24dp" />
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="28dp"
+            android:layout_marginBottom="20dp"
+            android:contentDescription="@string/app_name"
+            android:scaleType="center"
+            android:scaleX="1.4"
+            android:scaleY="1.4"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/logo_small" />
 
         <ImageButton
             android:id="@+id/share"
