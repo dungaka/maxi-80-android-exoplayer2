@@ -1,8 +1,7 @@
 **/.amplify
 **/.amplifyrc
-**/amplify/*
-**/awsconfiguration.json
 keys/**
+Maxi80/amplify/**
 Maxi80/release/**
 
 #Gradle
