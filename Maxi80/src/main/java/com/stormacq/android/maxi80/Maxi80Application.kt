@@ -23,7 +23,14 @@ import javax.net.ssl.X509TrustManager
 
 class Maxi80Application : Application() {
 
-    lateinit var station : StationQuery.Station
+
+    // default value (in case API is down)
+    var station = StationQuery.Station("Station",
+                                        resources.getString(R.string.app_name),
+                                        resources.getString(R.string.app_url),
+                                        "",
+                                        resources.getString(R.string.app_description),
+                                        resources.getString(R.string.app_description))
 
     lateinit var appSyncClient: AWSAppSyncClient
 
@@ -59,14 +66,6 @@ class Maxi80Application : Application() {
             primaryLocale = applicationContext.resources.configuration.locale
         }
         Log.d(TAG, "onCreate, locale is ${primaryLocale}}")
-
-        // default value for Station
-        station = StationQuery.Station("Station",
-                resources.getString(R.string.app_name),
-                resources.getString(R.string.app_url),
-                "",
-                resources.getString(R.string.app_description),
-                resources.getString(R.string.app_description))
 
         prepareAppSync()
 
