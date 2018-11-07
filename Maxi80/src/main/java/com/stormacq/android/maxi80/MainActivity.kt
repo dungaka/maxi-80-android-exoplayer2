@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
 
         val app = application as Maxi80Application
 
-        // avoid refreshing at app start, when we receive radio sttaion data
+        // avoid refreshing at app start, when we receive radio station data
         if (app.isPlaying) {
             this@MainActivity.runOnUiThread {
                 this.artist.startAnimation(AnimationUtils.loadAnimation(applicationContext, android.R.anim.fade_in))
