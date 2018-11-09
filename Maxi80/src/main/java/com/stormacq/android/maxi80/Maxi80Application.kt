@@ -172,20 +172,20 @@ class Maxi80Application : Application() {
         var data = metadata.split(" - ")
         Log.d(TAG, data.toString())
 
-        if (data.size < 2) {
+        if (data.size == 2) {
+            setTrack(data[0], data[1])
+        } else {
 
             data = metadata.split("-") // try without space
             Log.d(TAG, data.toString())
 
-            if (data.size < 2) {
-                setTrack(null, metadata)
-            } else {
+            if (data.size == 2) {
                 setTrack(data[0], data[1])
+            } else {
+                setTrack(null, metadata)
             }
-
-        } else {
-            setTrack(data[0], data[1])
         }
+
     }
 
     companion object {
