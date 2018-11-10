@@ -64,6 +64,7 @@
             android:clickable="true"
             android:focusable="true"
             app:fabSize="normal"
+            app:layout_constraintBottom_toTopOf="@+id/volumeBar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/track"
@@ -75,12 +76,13 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
+            android:layout_marginBottom="2dp"
             android:clickable="true"
             android:contentDescription="@string/volume_down"
             android:tint="@android:color/darker_gray"
             app:backgroundTint="@android:color/transparent"
+            app:layout_constraintBottom_toTopOf="@+id/logo"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/play_pause"
             app:srcCompat="@drawable/ic_volume_down_black_24dp" />
 
         <ImageButton
@@ -89,12 +91,13 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginBottom="20dp"
             android:clickable="true"
             android:contentDescription="@string/volume_up"
             android:tint="@android:color/darker_gray"
             app:backgroundTint="@android:color/transparent"
+            app:layout_constraintBottom_toBottomOf="@+id/logo"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/play_pause"
             app:srcCompat="@drawable/ic_volume_up_black_24dp" />
 
         <SeekBar
@@ -102,11 +105,11 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="5dp"
             android:layout_marginEnd="8dp"
+            android:layout_marginBottom="10dp"
+            app:layout_constraintBottom_toTopOf="@+id/logo"
             app:layout_constraintEnd_toStartOf="@+id/volumeUp"
-            app:layout_constraintStart_toEndOf="@+id/volumeDown"
-            app:layout_constraintTop_toBottomOf="@+id/play_pause" />
+            app:layout_constraintStart_toEndOf="@+id/volumeDown" />
 
         <ImageView
             android:id="@+id/logo"
