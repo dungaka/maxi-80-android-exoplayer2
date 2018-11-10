@@ -21,5 +21,6 @@
     <string name="share_subject">Maxi80 on Android</string>
     <string name="share_text">I am listening to %s by %s on Maxi80.  Check it out at https://maxi80.com.</string>
     <string name="share_title">Send message</string>
+    <string name="error_no_network">We can not connect to Maxi80.  Check that network is correctly activated and try again.</string>
 
 </resources>

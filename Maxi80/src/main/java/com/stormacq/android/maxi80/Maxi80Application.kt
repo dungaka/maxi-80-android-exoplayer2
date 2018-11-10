@@ -20,7 +20,6 @@ import java.util.*
 import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509TrustManager
 
-
 class Maxi80Application : Application() {
 
     lateinit var station : StationQuery.Station
@@ -143,7 +142,12 @@ class Maxi80Application : Application() {
 
                     override fun onFailure(e: ApolloException) {
                         Log.e(TAG, "Failed to perform StationQuery", e)
+
                         // default value is set already, let's use that one
+
+                        // inform customer we had a failure
+                        metaDataChangedListener?.onError(e)
+
                     }
                 })
     }

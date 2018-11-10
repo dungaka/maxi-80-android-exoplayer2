@@ -21,5 +21,6 @@
     <string name="share_subject">Maxi80 sur Android</string>
     <string name="share_text">J\'écoute %s par %s sur Maxi80.  Rejoignez-nous https://maxi80.com.</string>
     <string name="share_title">Envoyer</string>
+    <string name="error_no_network">Impossible de se connecter aux serveurs de Maxi80.  Vérifiez que votre connection réseau soit activée et essayez à nouveau</string>
 
 </resources>

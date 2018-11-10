@@ -7,6 +7,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.app.AppCompatDelegate
 import android.util.Log
@@ -193,6 +194,19 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
                     }
                 })
 
+    }
+
+    override fun onError(e: Exception) {
+
+        var s = "unknown error"
+
+        if (e is ApolloException) {
+            s = resources.getString(R.string.error_no_network)
+        }
+        Snackbar.make(window.decorView.rootView,
+                s,
+                android.R.attr.duration)
+                .show()
     }
 
     /**************************************************************************
