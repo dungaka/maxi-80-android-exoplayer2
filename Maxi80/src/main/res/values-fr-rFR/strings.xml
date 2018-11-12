@@ -14,8 +14,8 @@
     <string name="title_activity_about">A propos...</string>
     <string name="website">Web</string>
     <string name="donate">Supportez-nous</string>
-    <string name="copyright">Maxi 80 Android %s (%s)</string>
-    <string name="thanks">Basé ExoPlayer ICY extensions de saschpe@</string>
+    <string name="copyright">%s Android %s (%s)</string>
+    <string name="thanks">Basé sur ExoPlayer ICY extensions de saschpe@</string>
 
     <string name="share_to">info@maxi80.com</string>
     <string name="share_subject">Maxi80 sur Android</string>

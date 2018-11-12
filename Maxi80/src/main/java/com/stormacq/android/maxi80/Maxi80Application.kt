@@ -65,7 +65,9 @@ class Maxi80Application : Application() {
                 resources.getString(R.string.app_url),
                 "",
                 resources.getString(R.string.app_description),
-                resources.getString(R.string.app_description))
+                resources.getString(R.string.app_description),
+                resources.getString(R.string.website_url),
+                resources.getString(R.string.donation_url))
 
         prepareAppSync()
 

@@ -3,6 +3,8 @@
     <string name="app_name">Maxi 80</string>
     <string name="app_description">La radio de toute une génération</string>
     <string name="app_url">https://audio1.maxi80.com</string>
+    <string name="website_url">https://maxi80.com</string>
+    <string name="donation_url">https://www.maxi80.com/paypal.htm</string>
 
 
     <string name="cover">No cover to show</string>
@@ -14,7 +16,7 @@
     <string name="title_activity_about">About...</string>
     <string name="website">Website</string>
     <string name="donate">Support us</string>
-    <string name="copyright">Maxi 80 Android\n%s (%s)</string>
+    <string name="copyright">%s Android\n%s (%s)</string>
     <string name="thanks">Based on ExoPlayer ICY extensions from saschpe@</string>
 
     <string name="share_to">info@maxi80.com</string>
