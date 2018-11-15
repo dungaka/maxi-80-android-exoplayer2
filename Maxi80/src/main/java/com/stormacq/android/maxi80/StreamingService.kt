@@ -132,7 +132,6 @@ class StreamingService() : Service() {
 
     companion object {
         private const val TAG = "Maxi80_StreamingService"
-        private const val MINIMUM_SDK_FEATURES = 20
     }
 
     /**************************************************************************

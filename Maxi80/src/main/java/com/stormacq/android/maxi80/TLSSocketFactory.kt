@@ -1,12 +1,12 @@
 package com.stormacq.android.maxi80
 
 
-import java.net.InetAddress;
-import java.net.Socket;
+import java.net.InetAddress
+import java.net.Socket
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.SSLSocketFactory
 
 class TLSSocketFactory : SSLSocketFactory()  {
 
@@ -14,7 +14,7 @@ class TLSSocketFactory : SSLSocketFactory()  {
 
     init {
         val context = SSLContext.getInstance("TLS")
-        context.init(null, null, null);
+        context.init(null, null, null)
         internalSSLSocketFactory = context.socketFactory
     }
 
@@ -36,19 +36,19 @@ class TLSSocketFactory : SSLSocketFactory()  {
     }
 
     override fun  createSocket(host: String, port: Int) : Socket? {
-        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
+        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port))
     }
 
     override fun createSocket(host: String, port: Int, localHost: InetAddress, localPort: Int) : Socket? {
-        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port, localHost, localPort));
+        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port, localHost, localPort))
     }
 
     override fun createSocket(host: InetAddress, port: Int) : Socket? {
-        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
+        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port))
     }
 
     override fun createSocket(address: InetAddress, port: Int, localAddress: InetAddress, localPort: Int) : Socket? {
-        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(address, port, localAddress, localPort));
+        return enableTLSOnSocket(internalSSLSocketFactory.createSocket(address, port, localAddress, localPort))
     }
 
     private fun  enableTLSOnSocket(socket: Socket?) : Socket? {

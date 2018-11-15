@@ -48,7 +48,7 @@ class Maxi80Application : Application() {
         Log.d(TAG, "onCreate")
         super.onCreate()
 
-        var primaryLocale: Locale
+        val primaryLocale: Locale
 
         //check locale for debugging
         if (Build.VERSION.SDK_INT >= 24) {
@@ -57,7 +57,7 @@ class Maxi80Application : Application() {
             @Suppress("DEPRECATION")
             primaryLocale = applicationContext.resources.configuration.locale
         }
-        Log.d(TAG, "onCreate, locale is ${primaryLocale}}")
+        Log.d(TAG, "onCreate, locale is $primaryLocale")
 
         // default value for Station
         station = StationQuery.Station("Station",
@@ -162,11 +162,8 @@ class Maxi80Application : Application() {
      *************************************************************************/
 
     fun setTrack(artist: String?, track: String?) {
-        val _artist = artist ?: station.name()
-        val _track = track ?: station.desc()
-
-        currentArtist = _artist
-        currentTrack = _track
+        currentArtist = artist ?: station.name()
+        currentTrack = track ?: station.desc()
 
         metaDataChangedListener?.onCurrentTrackChanged(currentArtist, currentTrack)
     }

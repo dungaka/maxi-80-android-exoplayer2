@@ -126,8 +126,7 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
         })
 
         val am = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val MAX_VOLUME = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        volumeBar.max = MAX_VOLUME
+        volumeBar.max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         if (Build.VERSION.SDK_INT >= 26) {
             volumeBar.min = 0
         }
@@ -181,7 +180,7 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
                     override fun onResponse(response: Response<ArtworkQuery.Data>) {
                         this@MainActivity.runOnUiThread {
                             Log.d(TAG, "ArtworkQuery returned : " + response.data().toString())
-                            var url = response.data()?.artwork()?.url()
+                            val url = response.data()?.artwork()?.url()
                             if (url != null) {
                                 Picasso.get().load(url).into(cover)
                             } else {
