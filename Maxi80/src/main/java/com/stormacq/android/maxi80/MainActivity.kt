@@ -181,15 +181,19 @@ class MainActivity : AppCompatActivity(), MetaDataListener {
                     override fun onResponse(response: Response<ArtworkQuery.Data>) {
                         this@MainActivity.runOnUiThread {
                             Log.d(TAG, "ArtworkQuery returned : " + response.data().toString())
-                            var url = response.data()!!.artwork()!!.url()!!
-                            Picasso.get().load(url).into(cover)
+                            var url = response.data()?.artwork()?.url()
+                            if (url != null) {
+                                Picasso.get().load(url).into(cover)
+                            } else {
+                               Picasso.get().load(R.drawable.nocover_400x400).into(cover)
+                            }
                         }
                     }
 
                     override fun onFailure(e: ApolloException) {
                         this@MainActivity.runOnUiThread {
                             Log.e(TAG, "Failed to perform ArtworkQuery", e)
-                            cover.setImageResource(R.drawable.nocover_400x400)
+                            Picasso.get().load(R.drawable.nocover_400x400).into(cover)
                         }
                     }
                 })
