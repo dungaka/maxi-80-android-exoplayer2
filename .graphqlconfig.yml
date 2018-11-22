@@ -1,8 +1,8 @@
 projects:
   Maxi80 Artwork API:
-    schemaPath: src/main/graphql/schema.json
+    schemaPath: Maxi80/src/main/graphql/schema.json
     includes:
-      - src/main/graphql/**/*.graphql
+      - Maxi80/src/main/graphql/**/*.graphql
     excludes:
       - ./amplify/**
     extensions:
@@ -10,7 +10,7 @@ projects:
         graphQLApiId: errgnkbey5cntllyevjxpwxy7e
         codeGenTarget: ''
         generatedFileName: ''
-        docsFilePath: src/main/graphql/com/amazonaws/amplify/generated/graphql
+        docsFilePath: Maxi80/src/main/graphql/com/amazonaws/amplify/generated/graphql
         region: eu-west-1
       endpoints:
         prod: >-

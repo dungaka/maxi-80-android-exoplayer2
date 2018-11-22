@@ -1,7 +1,7 @@
 **/.amplify
 **/.amplifyrc
+amplify/**
 keys/**
-Maxi80/amplify/**
 Maxi80/release/**
 
 #Gradle
