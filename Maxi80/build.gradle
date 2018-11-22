@@ -33,7 +33,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'com.amazonaws:aws-android-sdk-core:2.8.1'
+    implementation 'com.amazonaws:aws-android-sdk-core:2.8.4'
     implementation 'com.amazonaws:aws-android-sdk-appsync:2.6.28'
 
     implementation 'com.squareup.picasso:picasso:2.71828'
