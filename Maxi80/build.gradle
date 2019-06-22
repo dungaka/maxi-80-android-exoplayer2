@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.amazonaws.appsync'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+// https://github.com/awslabs/aws-mobile-appsync-sdk-android/issues/91
+apply plugin: 'com.amazonaws.appsync'
 
 android {
     compileSdkVersion 28
@@ -10,8 +11,8 @@ android {
         applicationId "com.stormacq.android.maxi80"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 2018111500
-        versionName "v2.0.8"
+        versionCode 2019050100
+        versionName "v2.0.9"
         vectorDrawables {
             useSupportLibrary true
         }
@@ -33,8 +34,9 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'com.amazonaws:aws-android-sdk-core:2.8.4'
-    implementation 'com.amazonaws:aws-android-sdk-appsync:2.6.28'
+    implementation 'com.amazonaws:aws-android-sdk-core:2.13.6'
+    implementation 'com.amazonaws:aws-android-sdk-appsync:2.8.+'
+    implementation 'com.amazonaws:aws-android-sdk-pinpoint:2.13.6'
 
     implementation 'com.squareup.picasso:picasso:2.71828'
 

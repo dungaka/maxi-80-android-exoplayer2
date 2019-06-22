@@ -95,7 +95,7 @@ class Maxi80Application : Application() {
 
         if (Build.VERSION.SDK_INT <= MINIMUM_SDK_FEATURES) {
 
-            // The below is required on Android API <= 20 to enable TLSv1.0 (SSLv3 is not supported)
+            // The below is required on Android API <= 20 to enable TLSv1.1 and TLSv1.2 (TLSv1.0 and SSLv3 are not supported by AppSync)
             // https://stackoverflow.com/questions/29249630/android-enable-tlsv1-2-in-okhttp
             // https://github.com/square/okhttp/issues/1934
             // https://stackoverflow.com/questions/31002159/now-that-sslsocketfactory-is-deprecated-on-android-what-would-be-the-best-way-t
