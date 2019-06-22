@@ -8,6 +8,7 @@ Maxi80/release/**
 .gradle/
 build/
 local.properties
+keys/**
 
 # IntelliJ / Android Studio
 *.iml

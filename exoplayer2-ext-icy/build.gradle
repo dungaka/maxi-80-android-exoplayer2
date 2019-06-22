@@ -57,11 +57,12 @@ android {
 }
 
 dependencies {
-    // Runtime dependencies
-    api 'com.google.android.exoplayer:exoplayer-core:2.9.0'
-    api 'com.google.android.exoplayer:extension-okhttp:2.9.0'
+    compileOnly("androidx.annotation:annotation:1.0.2")
 
-    // Test dependencies
+    // Runtime dependencies
+    api 'com.google.android.exoplayer:exoplayer-core:2.10.0'
+    api 'com.google.android.exoplayer:extension-okhttp:2.10.0'
+
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.robolectric:robolectric:3.8'
     testImplementation 'org.mockito:mockito-core:2.19.0'
