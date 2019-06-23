@@ -1,6 +1,7 @@
 package saschpe.exoplayer2.ext.icy;
 
 import androidx.annotation.NonNull;
+
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSource;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Predicate;
