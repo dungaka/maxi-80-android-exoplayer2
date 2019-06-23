@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.stormacq.android.maxi80"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 26
         versionCode 2019050100
         versionName "v2.0.9"

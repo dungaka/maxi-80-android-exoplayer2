@@ -41,10 +41,10 @@
         </activity>
 
         <service
-            android:name=".StreamingService"
-            android:enabled="true"
-            android:exported="true"
-            android:process="com.stormacq.android.maxi80.streamingservice">
+            android:name=".StreamingService">
+            <!--android:enabled="true"-->
+            <!--android:exported="true"-->
+            <!--android:process="com.stormacq.android.maxi80.streamingservice">-->
         </service>
     </application>
 

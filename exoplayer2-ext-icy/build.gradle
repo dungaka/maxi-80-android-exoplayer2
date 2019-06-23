@@ -34,7 +34,7 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 26
         versionName '2.1.0'
     }
@@ -57,9 +57,11 @@ android {
 }
 
 dependencies {
+    compileOnly("androidx.annotation:annotation:1.0.2")
+
     // Runtime dependencies
-    api 'com.google.android.exoplayer:exoplayer-core:2.9.0'
-    api 'com.google.android.exoplayer:extension-okhttp:2.9.0'
+    api 'com.google.android.exoplayer:exoplayer-core:2.10.0'
+    api 'com.google.android.exoplayer:extension-okhttp:2.10.0'
 
     // Test dependencies
     testImplementation 'junit:junit:4.12'
