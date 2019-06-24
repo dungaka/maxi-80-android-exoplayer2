@@ -14,5 +14,4 @@
  * limitations under the License.
  */
 
-include ':exoplayer2-ext-icy'
 include ':Maxi80'

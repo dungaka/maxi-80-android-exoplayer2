@@ -15,10 +15,6 @@ import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
-
-import okhttp3.OkHttpClient
-import saschpe.exoplayer2.ext.icy.IcyHttpDataSourceFactory
 
 class StreamingService() : Service() {
 
@@ -84,36 +80,30 @@ class StreamingService() : Service() {
                 .build()
         exoPlayer?.audioAttributes = audioAttributes
 
-        // Custom HTTP data source factory which requests Icy metadata and parses it
-        val client = OkHttpClient.Builder().build()
-        val icyHttpDataSourceFactory = IcyHttpDataSourceFactory.Builder(client)
-                .setUserAgent(Util.getUserAgent(applicationContext, app.station.name()))
-                .setIcyHeadersListener { icyHeaders ->
-                    Log.d(TAG, "onIcyMetaData: icyHeaders=$icyHeaders")
-                }
-                .setIcyMetadataChangeListener { icyMetadata ->
-                    Log.d(TAG, "onIcyMetaData: icyMetadata=$icyMetadata")
-                    app.handleiCyMetaData(icyMetadata.streamTitle)
-                }
-                .build()
+        val versionName = BuildConfig.VERSION_NAME
+        val versionCode = BuildConfig.VERSION_CODE
 
-        // Produces DataSource instances through which media data is loaded
-        val dataSourceFactory = DefaultDataSourceFactory(
-                applicationContext, null, icyHttpDataSourceFactory
-        )
-        // Produces Extractor instances for parsing the media data
-        val extractorsFactory = DefaultExtractorsFactory()
+        val userAgent = "Android/ExoPlayer 2.10.0/%s %s (%s)".format(app.station.name(),versionName, versionCode)
 
-        // The MediaSource represents the media to be played
-        val mediaSource = ExtractorMediaSource.Factory(dataSourceFactory)
-                .setExtractorsFactory(extractorsFactory)
-                .createMediaSource(Uri.parse(app.station.streamURL()))
+        val mediaSource = ExtractorMediaSource
+            .Factory(DefaultDataSourceFactory(applicationContext, userAgent))
+            .setExtractorsFactory(DefaultExtractorsFactory())
+            .createMediaSource(Uri.parse(app.station.streamURL()))
 
         // Prepares media to play (happens on background thread) and triggers
         // {@code onPlayerStateChanged} callback when the stream is ready to play
         exoPlayer?.prepare(mediaSource)
-        exoPlayer?.playWhenReady = true
 
+        // register our meta data listener
+        exoPlayer?.addMetadataOutput {
+            // ICY: title="Gianna Nannini - I maschi (N2 du ToP 50 le 24-10-88)", url="null"
+            Log.d(TAG, it.get(0).toString())
+            val md = parseMetadata(it.get(0).toString()).streamTitle
+            Log.d(TAG, md.toString())
+            app.handleiCyMetaData(md)
+        }
+
+        exoPlayer?.playWhenReady = true
     }
 
     private fun releaseResources() {
@@ -136,10 +126,87 @@ class StreamingService() : Service() {
 
     /**************************************************************************
      *
-     * Exo Player callback
+     * Parsing ICY (Shoutcast) Metadata
      *
      *************************************************************************/
 
+    private fun parseMetadata(metaDataString: String): IcyMetadata {
+        val keyAndValuePairs = metaDataString.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val icyMetadata = IcyMetadata()
+
+        for (keyValuePair in keyAndValuePairs) {
+            val equalSignPosition = keyValuePair.indexOf('=')
+            if (equalSignPosition < 1) continue
+
+            val isString = (equalSignPosition + 1 < keyValuePair.length
+                    && keyValuePair[keyValuePair.length - 1] == '\''
+                    && keyValuePair[equalSignPosition + 1] == '\'')
+
+            val key = keyValuePair.substring(0, equalSignPosition)
+            val value = if (isString)
+                keyValuePair.substring(equalSignPosition + 2, keyValuePair.length - 1)
+            else if (equalSignPosition + 1 < keyValuePair.length)
+                keyValuePair.substring(equalSignPosition + 1)
+            else
+                ""
+
+            when (key) {
+                ICY_METADATA_STREAM_TITLE_KEY -> {
+                    icyMetadata.streamTitle = value
+                    icyMetadata.streamUrl = value
+                }
+                ICY_METADATA_STREAM_URL_KEY -> icyMetadata.streamUrl = value
+            }
+
+            icyMetadata.metadata.put(key, value)
+        }
+
+        return icyMetadata
+    }
+
+    private val ICY_METADATA_STREAM_TITLE_KEY = "StreamTitle"
+    private val ICY_METADATA_STREAM_URL_KEY = "StreamUrl"
+
+    /**
+     * Container for stream title and URL.
+     *
+     *
+     * The exact contents isn't specified and implementation specific. It's therefore up to the
+     * user to figure what format a given stream returns.
+     */
+    inner class IcyMetadata {
+        /**
+         * @return The song title.
+         */
+        var streamTitle: String = ""
+            internal set
+        /**
+         * @return Url to album artwork or more information about the current song.
+         */
+        var streamUrl: String = ""
+            internal set
+        /**
+         * Provides a map of all stream metadata.
+         *
+         * @return Complete metadata
+         */
+        var metadata: HashMap<String, String> = HashMap()
+            internal set
+
+        override fun toString(): String {
+            return "IcyMetadata{" +
+                    "streamTitle='" + streamTitle + '\''.toString() +
+                    ", streamUrl='" + streamUrl + '\''.toString() +
+                    ", metadata='" + metadata + '\''.toString() +
+                    '}'.toString()
+        }
+    }
+
+    /**************************************************************************
+     *
+     * Exo Player callback
+     *
+     *************************************************************************/
 
     private inner class ExoPlayerEventListener : Player.EventListener {
         override fun onTimelineChanged(timeline: Timeline, manifest: Any?, reason: Int) {
@@ -195,5 +262,6 @@ class StreamingService() : Service() {
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
         }
     } // end of private inner class
+
 }
 
