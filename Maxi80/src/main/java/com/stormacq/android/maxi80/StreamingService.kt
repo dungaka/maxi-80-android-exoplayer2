@@ -96,10 +96,8 @@ class StreamingService() : Service() {
 
         // register our meta data listener
         exoPlayer?.addMetadataOutput {
-            // ICY: title="Gianna Nannini - I maschi (N2 du ToP 50 le 24-10-88)", url="null"
             Log.d(TAG, it.get(0).toString())
             val md = parseMetadata(it.get(0).toString()).streamTitle
-            Log.d(TAG, md.toString())
             app.handleiCyMetaData(md)
         }
 
@@ -128,44 +126,39 @@ class StreamingService() : Service() {
      *
      * Parsing ICY (Shoutcast) Metadata
      *
+     * ICY: title="Gianna Nannini - I maschi (N2 du ToP 50 le 24-10-88)", url="null"
+     *
      *************************************************************************/
 
-    private fun parseMetadata(metaDataString: String): IcyMetadata {
-        val keyAndValuePairs = metaDataString.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+    fun parseMetadata(metaDataString: String): IcyMetadata {
+        val stripped = metaDataString.substringAfter("ICY: ")
+        val keyAndValuePairs = stripped.split(", url".toRegex()).toTypedArray()
         val icyMetadata = IcyMetadata()
 
-        for (keyValuePair in keyAndValuePairs) {
-            val equalSignPosition = keyValuePair.indexOf('=')
-            if (equalSignPosition < 1) continue
+        // we are just interested in the title meta data
+        val kv = keyAndValuePairs[0].split("=".toRegex()).toTypedArray()
 
-            val isString = (equalSignPosition + 1 < keyValuePair.length
-                    && keyValuePair[keyValuePair.length - 1] == '\''
-                    && keyValuePair[equalSignPosition + 1] == '\'')
+        var key = kv[0].trim()
+        var value = kv[1].trim()
+        // remove starting and ending "
+        value = value.substring(1, value.length -1)
 
-            val key = keyValuePair.substring(0, equalSignPosition)
-            val value = if (isString)
-                keyValuePair.substring(equalSignPosition + 2, keyValuePair.length - 1)
-            else if (equalSignPosition + 1 < keyValuePair.length)
-                keyValuePair.substring(equalSignPosition + 1)
-            else
-                ""
-
-            when (key) {
-                ICY_METADATA_STREAM_TITLE_KEY -> {
-                    icyMetadata.streamTitle = value
-                    icyMetadata.streamUrl = value
-                }
-                ICY_METADATA_STREAM_URL_KEY -> icyMetadata.streamUrl = value
+        when (key) {
+            ICY_METADATA_STREAM_TITLE_KEY -> {
+                icyMetadata.streamTitle = value
             }
-
-            icyMetadata.metadata.put(key, value)
+            ICY_METADATA_STREAM_URL_KEY -> {
+                icyMetadata.streamUrl = value
+            }
         }
+
+        icyMetadata.metadata.put(key, value)
 
         return icyMetadata
     }
 
-    private val ICY_METADATA_STREAM_TITLE_KEY = "StreamTitle"
-    private val ICY_METADATA_STREAM_URL_KEY = "StreamUrl"
+    private val ICY_METADATA_STREAM_TITLE_KEY = "title"
+    private val ICY_METADATA_STREAM_URL_KEY = "url"
 
     /**
      * Container for stream title and URL.
@@ -174,7 +167,7 @@ class StreamingService() : Service() {
      * The exact contents isn't specified and implementation specific. It's therefore up to the
      * user to figure what format a given stream returns.
      */
-    inner class IcyMetadata {
+     inner class IcyMetadata {
         /**
          * @return The song title.
          */
