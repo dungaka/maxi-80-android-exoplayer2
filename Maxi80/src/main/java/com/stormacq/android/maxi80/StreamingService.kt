@@ -11,6 +11,7 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
@@ -85,9 +86,8 @@ class StreamingService() : Service() {
 
         val userAgent = "Android/ExoPlayer 2.10.0/%s %s (%s)".format(app.station.name(),versionName, versionCode)
 
-        val mediaSource = ExtractorMediaSource
+        val mediaSource = ProgressiveMediaSource
             .Factory(DefaultDataSourceFactory(applicationContext, userAgent))
-            .setExtractorsFactory(DefaultExtractorsFactory())
             .createMediaSource(Uri.parse(app.station.streamURL()))
 
         // Prepares media to play (happens on background thread) and triggers
