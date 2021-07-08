@@ -7,7 +7,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.*
 import android.util.Log
+//import androidx.media2.exoplayer.external.ExoPlayerFactory
 import com.google.android.exoplayer2.*
+//import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
@@ -67,8 +69,8 @@ class StreamingService() : Service() {
         if (exoPlayer == null) {
             exoPlayer = ExoPlayerFactory.newSimpleInstance(applicationContext,
                     DefaultRenderersFactory(applicationContext),
-                    DefaultTrackSelector(),
-                    DefaultLoadControl()
+                    DefaultTrackSelector(applicationContext),
+                DefaultLoadControl()
             )
             exoPlayer?.addListener(exoPlayerEventListener)
         }
