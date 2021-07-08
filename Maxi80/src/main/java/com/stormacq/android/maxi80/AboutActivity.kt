@@ -4,9 +4,10 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.View
-import kotlinx.android.synthetic.main.activity_about.*
+//import kotlinx.android.synthetic.main.activity_about.*
 import android.content.Intent
 import android.net.Uri
+import kotlinx.android.synthetic.main.activity_about.*
 
 
 class AboutActivity : AppCompatActivity() {
@@ -19,8 +20,8 @@ class AboutActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_about)
 
-        val versionName = BuildConfig.VERSION_NAME
-        val versionCode = BuildConfig.VERSION_CODE
+        val versionName = "v2.1.4"
+        val versionCode = "20210708"
 
         Log.d(TAG, "%s (%s)".format(versionName, versionCode))
 

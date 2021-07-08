@@ -81,8 +81,8 @@ class StreamingService() : Service() {
                 .build()
         exoPlayer?.audioAttributes = audioAttributes
 
-        val versionName = BuildConfig.VERSION_NAME
-        val versionCode = BuildConfig.VERSION_CODE
+        val versionName = "v2.1.4"
+        val versionCode = "20210708"
 
         val userAgent = "Android/ExoPlayer 2.10.0/%s %s (%s)".format(app.station.name(),versionName, versionCode)
 
